@@ -1,20 +1,18 @@
-// chatThemes.js — tema latar chat ala WhatsApp (kurasi, BUKAN wallpaper bebas).
-// Tiap tema punya warna terang & gelap agar tetap enak di kedua mode app.
-// `doodle:true` → tampilkan pola doodle WhatsApp di atas warna.
+// chatThemes.js — tema latar chat (kurasi). Default = doodle WhatsApp generik;
+// Polos = warna saja; sisanya = doodle BERTEMA kategori (lihat lib/doodles.js):
+// pola line-art ikon kategori, opacity rendah, di atas warna latar tema.
+// Tiap tema punya warna light & dark agar enak di kedua mode app.
 //
-// Dipakai stores.applyChatTheme() → set CSS var --chat-bg & --chat-doodle.
+// Dipakai stores.applyChatTheme() → set CSS var --chat-bg-* & --chat-doodle.
 
 export const CHAT_THEMES = [
   { id: "default", label: "Default", doodle: true,  light: "#eef1f6", dark: "#0a0f14" },
   { id: "plain",   label: "Polos",   doodle: false, light: "#eef1f6", dark: "#0a0f14" },
-  { id: "sage",    label: "Sage",    doodle: false, light: "#dde7da", dark: "#11201a" },
-  { id: "ocean",   label: "Ocean",   doodle: false, light: "#d7e6ee", dark: "#0d1b24" },
-  { id: "lilac",   label: "Lilac",   doodle: false, light: "#e4ddee", dark: "#1a1424" },
-  { id: "sand",    label: "Sand",    doodle: false, light: "#ece2d2", dark: "#221c12" },
-  { id: "graphite",label: "Graphite",doodle: false, light: "#e3e5e8", dark: "#15191c" },
-  { id: "dusk",    label: "Dusk",    doodle: false,
-    light: "linear-gradient(135deg,#dfe9f3,#e7d8c9)",
-    dark:  "linear-gradient(135deg,#0b141a,#10322a)" },
+  { id: "botani",    label: "Botani",    cat: "botani",    light: "#eef3ec", dark: "#0c140f" },
+  { id: "sirkuit",   label: "Sirkuit",   cat: "sirkuit",   light: "#e9eef4", dark: "#0b1016" },
+  { id: "angkasa",   label: "Angkasa",   cat: "angkasa",   light: "#eceef6", dark: "#0a0d1a" },
+  { id: "geometris", label: "Geometris", cat: "geometris", light: "#f0f1f3", dark: "#101216" },
+  { id: "tropis",    label: "Tropis",    cat: "tropis",    light: "#f3eee6", dark: "#1a130f" },
 ];
 
 export function chatThemeById(id) {

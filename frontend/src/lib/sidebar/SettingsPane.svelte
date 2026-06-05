@@ -1,6 +1,7 @@
 <script>
   import { railView, theme, effectiveTheme, chatTheme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn } from "../../stores.js";
   import { CHAT_THEMES, chatThemeSwatch } from "../chatThemes.js";
+  import { doodleURI } from "../doodles.js";
   import { getProfile, getSettingsItems } from "../../services/data.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import { initial } from "../util.js";
@@ -91,7 +92,8 @@
         <div class="ct-swatches">
           {#each CHAT_THEMES as ct}
             <button class="ct-sw {$chatTheme === ct.id ? 'on' : ''}" title={ct.label}
-              style="background:{chatThemeSwatch(ct.id, ctDark)}" on:click={() => chatTheme.set(ct.id)}>
+              style="background-color:{chatThemeSwatch(ct.id, ctDark)};{ct.cat ? `background-image:url(\"${doodleURI(ct.cat, ctDark)}\");background-size:118px;` : ''}"
+              on:click={() => chatTheme.set(ct.id)}>
               <span class="ct-name">{ct.label}</span>
             </button>
           {/each}

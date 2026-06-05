@@ -2,6 +2,7 @@ import { writable, get, derived } from "svelte/store";
 import * as data from "./services/data.js";
 import { t } from "./lib/i18n.js";
 import { chatThemeById } from "./lib/chatThemes.js";
+import { doodleURI } from "./lib/doodles.js";
 const tr = (k) => get(t)(k);
 
 const params = new URLSearchParams(location.search);
@@ -65,7 +66,10 @@ function applyChatTheme(id, dark) {
   const isGrad = /gradient\(/.test(bg);
   root.setProperty("--chat-bg-col", isGrad ? "transparent" : bg);
   root.setProperty("--chat-bg-img", isGrad ? bg : "none");
-  root.setProperty("--chat-doodle", th.doodle ? "var(--wa-doodle)" : "none");
+  // Doodle: kategori (SVG bertema) → Default (PNG WhatsApp) → tak ada (Polos).
+  const doodle = th.cat ? `url("${doodleURI(th.cat, dark)}")`
+    : th.doodle ? "var(--wa-doodle)" : "none";
+  root.setProperty("--chat-doodle", doodle);
 }
 derived([chatTheme, effectiveTheme], ([$ct, $et]) => [$ct, $et])
   .subscribe(([ct, et]) => applyChatTheme(ct, et === "dark"));
