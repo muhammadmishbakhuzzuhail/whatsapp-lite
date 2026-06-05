@@ -53,11 +53,14 @@ const GLYPHS = {
   ],
 };
 
-// Sebaran 3×3 dgn jitter + rotasi/skala variatif (organik tapi deterministik).
+// Sebaran rapat ala doodle WhatsApp: grid 5×5 staggered (brick) = 25 glyph/tile,
+// skala kecil + rotasi variatif → padat tapi organik (deterministik).
 const SPOTS = [
-  [40, 46, 1.0, 12], [150, 30, 0.85, -20], [262, 52, 1.1, 30],
-  [60, 150, 0.9, -8], [170, 140, 1.15, 18], [286, 158, 0.8, -26],
-  [36, 250, 1.05, 22], [150, 262, 0.92, -14], [268, 256, 1.0, 8],
+  [18, 22, 0.62, 10], [80, 22, 0.55, -18], [142, 22, 0.68, 26], [204, 22, 0.58, -8], [266, 22, 0.64, 16],
+  [49, 86, 0.60, -24], [111, 86, 0.66, 12], [173, 86, 0.56, -14], [235, 86, 0.70, 22], [297, 86, 0.58, -30],
+  [18, 150, 0.64, 18], [80, 150, 0.57, -10], [142, 150, 0.69, 8], [204, 150, 0.60, -22], [266, 150, 0.63, 28],
+  [49, 214, 0.58, -16], [111, 214, 0.67, 20], [173, 214, 0.55, -26], [235, 214, 0.65, 10], [297, 214, 0.60, -12],
+  [18, 278, 0.66, 24], [80, 278, 0.56, -20], [142, 278, 0.62, 14], [204, 278, 0.70, -6], [266, 278, 0.59, 30],
 ];
 
 function buildSVG(cat, stroke) {
@@ -66,7 +69,7 @@ function buildSVG(cat, stroke) {
   SPOTS.forEach((p, i) => {
     inner += `<g transform="translate(${p[0]} ${p[1]}) scale(${p[2]}) rotate(${p[3]} 18 18)"><path d="${gl[i % gl.length]}"/></g>`;
   });
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='330' height='330' viewBox='0 0 330 330' fill='none' stroke='${stroke}' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'>${inner}</svg>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='330' height='330' viewBox='0 0 330 330' fill='none' stroke='${stroke}' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>${inner}</svg>`;
   return "data:image/svg+xml," + encodeURIComponent(svg);
 }
 
@@ -74,7 +77,7 @@ function buildSVG(cat, stroke) {
 // alpha: opacity garis. Default sangat samar (latar chat). Swatch pakai lebih
 // tinggi agar pratinjau tetap kebaca di kotak kecil.
 export function doodleURI(cat, dark, alpha) {
-  const a = alpha != null ? alpha : (dark ? 0.04 : 0.05);
+  const a = alpha != null ? alpha : (dark ? 0.07 : 0.08);
   return buildSVG(cat, dark ? `rgba(255,255,255,${a})` : `rgba(15,23,32,${a})`);
 }
 
