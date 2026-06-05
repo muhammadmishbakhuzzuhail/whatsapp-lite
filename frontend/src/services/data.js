@@ -140,8 +140,12 @@ export async function getState() {
 }
 
 // --- Aksi pesan (Tier 1) ---
-export async function sendMedia(jid, kind, caption, fileName, dataURI) {
-  if (LIVE) return A.SendMedia(jid, kind, caption, fileName, dataURI);
+export async function sendMedia(jid, kind, caption, fileName, dataURI, viewOnce = false) {
+  if (LIVE) return A.SendMedia(jid, kind, caption, fileName, dataURI, viewOnce);
+  return "";
+}
+export async function sendContact(jid, displayName, phone) {
+  if (LIVE) return A.SendContact(jid, displayName, phone);
   return "";
 }
 export function editMessage(jid, msgID, text) {

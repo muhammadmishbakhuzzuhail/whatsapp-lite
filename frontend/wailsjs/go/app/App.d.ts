@@ -95,9 +95,11 @@ export function RequestPhotos(arg1:Array<string>):Promise<void>;
 
 export function SearchMessages(arg1:string):Promise<Array<app.SearchHitDTO>>;
 
+export function SendContact(arg1:string,arg2:string,arg3:string):Promise<string>;
+
 export function SendLocation(arg1:string,arg2:number,arg3:number,arg4:string):Promise<string>;
 
-export function SendMedia(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string):Promise<string>;
+export function SendMedia(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:boolean):Promise<string>;
 
 export function SendPoll(arg1:string,arg2:string,arg3:Array<string>,arg4:number):Promise<string>;
 

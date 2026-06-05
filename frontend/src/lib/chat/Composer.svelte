@@ -1,8 +1,8 @@
 <script>
   import { tick } from "svelte";
   import { get } from "svelte/store";
-  import { sendMessage, sendMediaMessage, replyDraft, pushToast, editDraft, editMessage } from "../../stores.js";
-  import { getGroupInfo, sendLocation, sendPoll } from "../../services/data.js";
+  import { sendMessage, sendMediaMessage, replyDraft, pushToast, editDraft, editMessage, chats } from "../../stores.js";
+  import { getGroupInfo, sendLocation, sendPoll, sendContact } from "../../services/data.js";
   import { t } from "../i18n.js";
   export let chatId;
   export let group = false;
@@ -29,6 +29,27 @@
       () => pushToast($t("loc_denied")),
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+  // --- foto sekali lihat (view-once) ---
+  let onceInput;
+  function attachOnce() { attachOpen = false; onceInput && onceInput.click(); }
+  function onOnce(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const kind = f.type.startsWith("video/") ? "video" : "image";
+    const r = new FileReader();
+    r.onload = () => sendMediaMessage(chatId, kind, "", f.name, r.result, true);
+    r.readAsDataURL(f);
+  }
+  // --- kirim kontak ---
+  let contactOpen = false, contactQ = "";
+  function openContact() { attachOpen = false; contactOpen = true; contactQ = ""; }
+  $: contactList = $chats.filter((c) => !c.group && (c.name || "").toLowerCase().includes(contactQ.toLowerCase()));
+  function pickContact(c) {
+    const num = (c.id || "").split("@")[0].split(":")[0];
+    sendContact(chatId, c.name, num);
+    contactOpen = false;
   }
   // --- modal polling ---
   let pollOpen = false, pollQ = "", pollOpts = ["", ""];
@@ -221,6 +242,34 @@
     <button class="am-item" on:click={openPoll}>
       <svg viewBox="0 0 24 24"><path d="M5 5h14M5 12h9M5 19h5"/></svg>{$t("attach_poll")}
     </button>
+    <button class="am-item" on:click={openContact}>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>{$t("attach_contact")}
+    </button>
+    <button class="am-item" on:click={attachOnce}>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/><path d="M3 12a9 9 0 0 0 1 4"/></svg>{$t("attach_once")}
+    </button>
+    <input type="file" accept="image/*,video/*" bind:this={onceInput} on:change={onOnce} style="display:none" />
+  </div>
+{/if}
+
+{#if contactOpen}
+  <div class="nc-modal" on:click|self={() => (contactOpen = false)}>
+    <div class="nc-card" style="max-width:420px;max-height:70vh;display:flex;flex-direction:column">
+      <h3 style="margin:0 0 12px">{$t("attach_contact")}</h3>
+      <input bind:value={contactQ} placeholder={$t("search")}
+        style="width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg2);color:var(--text);font:inherit;margin-bottom:10px" />
+      <div style="overflow-y:auto;flex:1">
+        {#each contactList as c (c.id)}
+          <button class="am-item" style="width:100%" on:click={() => pickContact(c)}>
+            <span style="width:34px;height:34px;border-radius:50%;background:{c.color};color:#fff;display:grid;place-items:center;font-weight:600">{(c.name||"?")[0]}</span>
+            {c.name}
+          </button>
+        {/each}
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn-ghost" on:click={() => (contactOpen = false)}>{$t("cancel")}</button>
+      </div>
+    </div>
   </div>
 {/if}
 

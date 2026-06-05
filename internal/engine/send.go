@@ -80,9 +80,19 @@ func (e *Engine) ForwardMedia(ctx context.Context, to, srcProtoB64 string) (stri
 	return e.sendMessage(ctx, to, &msg)
 }
 
+// SendContact mengirim kartu kontak (vCard).
+func (e *Engine) SendContact(ctx context.Context, to, displayName, vcard string) (string, error) {
+	msg := &waE2E.Message{ContactMessage: &waE2E.ContactMessage{
+		DisplayName: proto.String(displayName),
+		Vcard:       proto.String(vcard),
+	}}
+	return e.sendMessage(ctx, to, msg)
+}
+
 // SendMedia mengunggah `data` lalu mengirimnya sebagai pesan media. kind:
 // "image" | "video" | "voice" | "document". caption/fileName opsional.
-func (e *Engine) SendMedia(ctx context.Context, to, kind, mime, caption, fileName string, data []byte) (string, error) {
+// viewOnce=true → foto/video sekali lihat.
+func (e *Engine) SendMedia(ctx context.Context, to, kind, mime, caption, fileName string, data []byte, viewOnce bool) (string, error) {
 	mt, err := mediaTypeFor(kind)
 	if err != nil {
 		return "", err
@@ -100,11 +110,17 @@ func (e *Engine) SendMedia(ctx context.Context, to, kind, mime, caption, fileNam
 			URL: &up.URL, DirectPath: &up.DirectPath, MediaKey: up.MediaKey,
 			FileEncSHA256: up.FileEncSHA256, FileSHA256: up.FileSHA256, FileLength: &length,
 		}
+		if viewOnce {
+			msg.ImageMessage.ViewOnce = proto.Bool(true)
+		}
 	case "video":
 		msg.VideoMessage = &waE2E.VideoMessage{
 			Caption: strPtr(caption), Mimetype: proto.String(mime),
 			URL: &up.URL, DirectPath: &up.DirectPath, MediaKey: up.MediaKey,
 			FileEncSHA256: up.FileEncSHA256, FileSHA256: up.FileSHA256, FileLength: &length,
+		}
+		if viewOnce {
+			msg.VideoMessage.ViewOnce = proto.Bool(true)
 		}
 	case "voice":
 		if mime == "" {

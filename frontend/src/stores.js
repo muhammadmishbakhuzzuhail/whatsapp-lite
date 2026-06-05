@@ -155,10 +155,10 @@ export async function sendMessage(id, text, quote, mentions) {
 }
 
 // Kirim media (dataURI). kind: image|video|voice|document.
-export async function sendMediaMessage(id, kind, caption, fileName, dataURI) {
+export async function sendMediaMessage(id, kind, caption, fileName, dataURI, viewOnce = false) {
   if (id == null || !dataURI) return;
   if (data.LIVE) {
-    await data.sendMedia(id, kind, caption || "", fileName || "", dataURI);
+    await data.sendMedia(id, kind, caption || "", fileName || "", dataURI, viewOnce);
     await reloadMessages(id);
     await refreshChats();
     return;

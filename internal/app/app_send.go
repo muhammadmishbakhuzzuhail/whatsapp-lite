@@ -14,8 +14,8 @@ import (
 )
 
 // SendMedia mengirim media (data-URI) lalu menyimpannya lokal & memberi tahu UI.
-// kind: "image" | "video" | "voice" | "document".
-func (a *App) SendMedia(jid, kind, caption, fileName, dataURI string) string {
+// kind: "image" | "video" | "voice" | "document". viewOnce → sekali lihat.
+func (a *App) SendMedia(jid, kind, caption, fileName, dataURI string, viewOnce bool) string {
 	if a.eng == nil {
 		return ""
 	}
@@ -24,7 +24,7 @@ func (a *App) SendMedia(jid, kind, caption, fileName, dataURI string) string {
 		runtime.EventsEmit(a.ctx, "wa:error", "media tak valid: "+err.Error())
 		return ""
 	}
-	id, err := a.eng.SendMedia(a.ctx, jid, kind, mime, caption, fileName, data)
+	id, err := a.eng.SendMedia(a.ctx, jid, kind, mime, caption, fileName, data, viewOnce)
 	if err != nil {
 		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
 		return ""
@@ -277,6 +277,31 @@ func (a *App) GetMessageInfo(chat, msgID string) *MsgInfoDTO {
 		}
 	}
 	return info
+}
+
+// SendContact mengirim kartu kontak (membangun vCard dari nama + nomor).
+func (a *App) SendContact(jid, displayName, phone string) string {
+	if a.eng == nil {
+		return ""
+	}
+	num := ""
+	for _, r := range phone {
+		if r >= '0' && r <= '9' {
+			num += string(r)
+		}
+	}
+	vcard := "BEGIN:VCARD\nVERSION:3.0\nFN:" + displayName +
+		"\nTEL;type=CELL;type=VOICE;waid=" + num + ":+" + num + "\nEND:VCARD"
+	id, err := a.eng.SendContact(a.ctx, jid, displayName, vcard)
+	if err != nil {
+		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
+		return ""
+	}
+	_ = a.store.SaveMessage(a.ctx, storage.Message{
+		ID: id, ChatJID: jid, Text: "👤 " + displayName, Timestamp: time.Now(), FromMe: true,
+	})
+	runtime.EventsEmit(a.ctx, "wa:message", jid)
+	return id
 }
 
 // SendLocation mengirim lokasi (lat/lng + nama opsional).
