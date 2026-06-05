@@ -3,16 +3,22 @@
   import { t } from "../i18n.js";
 
   let caption = "";
+  let idx = 0;
   let last = null;
-  // reset caption tiap draft baru
-  $: if ($mediaDraft && $mediaDraft.dataURI !== last) { last = $mediaDraft.dataURI; caption = ""; }
+  $: if ($mediaDraft && $mediaDraft !== last) { last = $mediaDraft; caption = ""; idx = 0; }
+  $: items = $mediaDraft?.items || [];
+  $: cur = items[idx];
 
-  function close() { mediaDraft.set(null); caption = ""; }
+  function close() { mediaDraft.set(null); caption = ""; idx = 0; }
   async function send() {
     const d = $mediaDraft;
     if (!d) return;
     mediaDraft.set(null);
-    await sendMediaMessage(d.chatId, d.kind, caption.trim(), d.name || "", d.dataURI, d.viewOnce || false);
+    // Caption ikut gambar yang sedang dilihat (sisanya tanpa caption) — ala WhatsApp.
+    for (let i = 0; i < d.items.length; i++) {
+      const it = d.items[i];
+      await sendMediaMessage(d.chatId, it.kind, i === idx ? caption.trim() : "", it.name || "", it.dataURI, d.viewOnce || false);
+    }
     caption = "";
   }
   function onKey(e) {
@@ -24,19 +30,29 @@
 
 <svelte:window on:keydown={onKey} />
 
-{#if $mediaDraft}
+{#if $mediaDraft && cur}
   <div class="mp-overlay" on:click|self={close}>
     <button class="mp-x" title={$t("close")} on:click={close}>✕</button>
     <div class="mp-stage">
-      {#if $mediaDraft.kind === "video"}
-        <video class="mp-media" src={$mediaDraft.dataURI} controls></video>
+      {#if cur.kind === "video"}
+        <video class="mp-media" src={cur.dataURI} controls></video>
       {:else}
-        <img class="mp-media" src={$mediaDraft.dataURI} alt="" />
+        <img class="mp-media" src={cur.dataURI} alt="" />
       {/if}
     </div>
+    {#if items.length > 1}
+      <div class="mp-strip">
+        {#each items as it, i}
+          <button class="mp-thumb {i === idx ? 'on' : ''}" on:click={() => (idx = i)}>
+            {#if it.kind === "video"}<video src={it.dataURI} muted></video>{:else}<img src={it.dataURI} alt="" />{/if}
+          </button>
+        {/each}
+      </div>
+    {/if}
     <div class="mp-bar">
       <input class="mp-caption" placeholder={$t("add_caption")} bind:value={caption} autofocus />
       <button class="mp-send" on:click={send} title={$t("send")}>
+        {#if items.length > 1}<span class="mp-count">{items.length}</span>{/if}
         <svg viewBox="0 0 24 24"><path d="M3 11l18-8-8 18-2-7-8-3z"/></svg>
       </button>
     </div>
@@ -47,9 +63,14 @@
   .mp-overlay { position:fixed; inset:0; z-index:70; background:rgba(11,20,26,.97); display:flex; flex-direction:column; }
   .mp-x { position:absolute; top:16px; left:18px; background:none; border:0; color:#fff; font-size:22px; cursor:pointer; z-index:2; }
   .mp-stage { flex:1; display:grid; place-items:center; overflow:hidden; padding:48px 16px 8px; }
-  .mp-media { max-width:90vw; max-height:72vh; object-fit:contain; border-radius:8px; }
+  .mp-media { max-width:90vw; max-height:66vh; object-fit:contain; border-radius:8px; }
+  .mp-strip { display:flex; gap:8px; justify-content:center; padding:6px 16px; overflow-x:auto; }
+  .mp-thumb { width:54px; height:54px; border-radius:8px; overflow:hidden; border:2px solid transparent; padding:0; background:none; cursor:pointer; flex:0 0 auto; }
+  .mp-thumb.on { border-color:var(--accent); }
+  .mp-thumb img, .mp-thumb video { width:100%; height:100%; object-fit:cover; }
   .mp-bar { display:flex; align-items:center; gap:10px; padding:14px 18px 22px; max-width:760px; width:100%; margin:0 auto; }
   .mp-caption { flex:1; border:0; border-radius:22px; padding:12px 18px; background:var(--bg2,#1f2c34); color:var(--text,#e9edef); font:inherit; outline:none; }
-  .mp-send { width:48px; height:48px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; display:grid; place-items:center; flex:0 0 auto; }
+  .mp-send { position:relative; width:48px; height:48px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; display:grid; place-items:center; flex:0 0 auto; }
   .mp-send svg { width:22px; height:22px; fill:currentColor; }
+  .mp-count { position:absolute; top:-4px; right:-4px; background:#fff; color:var(--accent); font-size:11px; font-weight:700; border-radius:9px; min-width:18px; height:18px; display:grid; place-items:center; }
 </style>

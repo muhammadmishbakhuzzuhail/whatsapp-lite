@@ -36,24 +36,29 @@
   let dragOver = false;
   function kindOfFile(type) { return type.startsWith("video/") ? "video" : type.startsWith("image/") ? "image" : type.startsWith("audio/") ? "voice" : "document"; }
   function fileToDataURI(f) { return new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); }); }
-  // Gambar/video → modal pratinjau + caption. Dokumen/audio → kirim langsung.
-  async function previewFile(f, viewOnce = false) {
-    const kind = kindOfFile(f.type);
-    const dataURI = await fileToDataURI(f);
-    if (kind === "image" || kind === "video") mediaDraft.set({ chatId, kind, name: f.name, dataURI, viewOnce });
-    else await sendMediaMessage(chatId, kind, "", f.name, dataURI);
+  // Gambar/video → modal pratinjau album + caption. Dokumen/audio → kirim langsung.
+  async function previewFiles(fileList, viewOnce = false) {
+    const items = [];
+    for (const f of fileList) {
+      const kind = kindOfFile(f.type);
+      const dataURI = await fileToDataURI(f);
+      if (kind === "image" || kind === "video") items.push({ kind, name: f.name, dataURI });
+      else await sendMediaMessage(chatId, kind, "", f.name, dataURI);
+    }
+    if (items.length) mediaDraft.set({ chatId, items, viewOnce });
   }
+  function previewFile(f, viewOnce = false) { previewFiles([f], viewOnce); }
   // Media dari web (URL) → unduh sisi Go → pratinjau.
   async function previewUrl(url) {
     pushToast($t("fetching_media"), "ok");
     const dataURI = await fetchRemoteMedia(url);
     if (!dataURI) { pushToast($t("media_fetch_fail")); return; }
-    mediaDraft.set({ chatId, kind: dataURI.startsWith("data:video") ? "video" : "image", name: "web", dataURI });
+    mediaDraft.set({ chatId, items: [{ kind: dataURI.startsWith("data:video") ? "video" : "image", name: "web", dataURI }] });
   }
   function onDrop(e) {
     e.preventDefault(); dragOver = false;
     const files = [...(e.dataTransfer?.files || [])];
-    if (files.length) { files.forEach((f) => previewFile(f)); return; }
+    if (files.length) { previewFiles(files); return; }
     const uri = e.dataTransfer?.getData("text/uri-list") || e.dataTransfer?.getData("text/plain") || "";
     const m = uri.match(/https?:\/\/[^\s"]+/);
     if (m) previewUrl(m[0]);
@@ -61,7 +66,7 @@
   function onPaste(e) {
     const items = [...(e.clipboardData?.items || [])];
     const files = items.filter((it) => it.type.startsWith("image/") || it.type.startsWith("video/")).map((it) => it.getAsFile()).filter(Boolean);
-    if (files.length) { e.preventDefault(); files.forEach((f) => previewFile(f)); return; }
+    if (files.length) { e.preventDefault(); previewFiles(files); return; }
     const text = (e.clipboardData?.getData("text") || "").trim();
     if (/^https?:\/\/\S+\.(png|jpe?g|gif|webp|bmp|mp4|webm|mov)(\?\S*)?$/i.test(text)) { e.preventDefault(); previewUrl(text); }
   }
@@ -153,9 +158,9 @@
     return "document";
   }
   async function onFile(e) {
-    const file = e.target.files && e.target.files[0];
+    const files = [...(e.target.files || [])];
     e.target.value = "";
-    if (file) await previewFile(file);
+    if (files.length) await previewFiles(files);
   }
 
   // Emoji + kata kunci (cari ID/EN) → filter di picker.
@@ -421,7 +426,7 @@
   <button class="icon-btn" aria-label={$t("attach")} on:click={toggleAttach}>
     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
   </button>
-  <input type="file" bind:this={fileInput} on:change={onFile} hidden
+  <input type="file" multiple bind:this={fileInput} on:change={onFile} hidden
     accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" />
 
   <div class="input">
