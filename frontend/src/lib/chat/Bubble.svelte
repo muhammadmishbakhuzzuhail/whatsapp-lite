@@ -18,11 +18,13 @@
   $: isMedia = msg.type === "image" || msg.type === "video" || msg.type === "sticker" || msg.type === "gif";
   // Stiker & GIF → bubble TRANSPARAN (tanpa kartu putih, hanya nama yg ber-pill).
   // Foto/video → KARTU (bg + padding tipis), rasio natural (min/max), caption di bawah.
-  $: bubbleClass = (msg.type === "sticker" || msg.type === "gif")
+  $: bubbleClass = msg.type === "sticker"
     ? "media sticker-bubble"
-    : (msg.type === "image" || msg.type === "video")
-      ? "media imgcard"
-      : msg.type === "voice" ? "voice" : "";
+    : msg.type === "gif"
+      ? "media sticker-bubble gif-bubble"
+      : (msg.type === "image" || msg.type === "video")
+        ? "media imgcard"
+        : msg.type === "voice" ? "voice" : "";
   $: isGroupIn = group && msg.dir === "in";
   $: showSender = isGroupIn && msg.sender && firstOfRun;
   $: senderCol = msg.senderColor || senderColorFor(msg.senderId || msg.sender || "");

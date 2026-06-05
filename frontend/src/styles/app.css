@@ -307,7 +307,15 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 /* Stiker: transparan tanpa kartu. Foto/video: KARTU (bg+padding tipis). */
 .bubble.sticker-bubble { background: transparent; box-shadow: none; padding: 0; }
 .bubble.sticker-bubble::before { display: none; }
-.bubble.sticker-bubble .meta { position: absolute; right: 6px; bottom: 6px;
+/* Waktu stiker: DI BAWAH stiker (bukan overlay pill gelap di atas gambar),
+   teks abu polos, rata kanan selebar stiker. */
+.bubble.sticker-bubble .meta { position: static; float: none; clear: both;
+  display: flex; justify-content: flex-end; align-items: center;
+  width: var(--sticker-w, 160px); margin: 3px 1px 0; padding: 0;
+  background: none; color: var(--text2); }
+/* GIF = opaque (mirip foto) → waktu overlay pill di pojok kanan-bawah. */
+.bubble.gif-bubble .meta { position: absolute; right: 6px; bottom: 6px;
+  float: none; clear: none; display: inline-flex; width: auto; margin: 0;
   background: rgba(0,0,0,.45); color: #fff; border-radius: 8px; padding: 1px 6px; }
 /* Foto/video EDGE-TO-EDGE (ala WhatsApp): gambar mengisi bubble tanpa bingkai
    putih. Nama/quote (grup/balasan) = strip putih tipis di atas; waktu OVERLAY
