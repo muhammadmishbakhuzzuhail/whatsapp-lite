@@ -54,6 +54,9 @@
     : (msg.thumb || "");
   let mediaErr = false;
   let videoPlaying = false;
+  // Sumber gambar: /media (kualitas penuh) → bila gagal (mis. media terkirim
+  // belum punya proto tersimpan) jatuh ke thumb data-URI. Cegah gambar kosong.
+  $: imgSrc = mediaErr ? (msg.thumb || "") : (mediaUrl || msg.thumb || "");
 
   let translated = null;
   let busy = false;
@@ -158,8 +161,7 @@
     setTimeout(loadPollVotes, 400);
   }
   function openMedia() {
-    if (!mediaUrl || mediaErr) return;
-    if (msg.type === "image") lightbox.set({ url: mediaUrl, type: "image", caption });
+    if (msg.type === "image") { if (imgSrc) lightbox.set({ url: imgSrc, type: "image", caption }); }
     else if (msg.type === "video") videoPlaying = true; // putar inline
     // stiker: tak ada aksi
   }
@@ -224,8 +226,8 @@
         role="button" tabindex="0" on:click={openMedia}>
         {#if msg.type === "video" && videoPlaying}
           <video class="media-img" src={mediaUrl} controls autoplay></video>
-        {:else if mediaUrl && !mediaErr}
-          <img class="media-img" src={mediaUrl} alt="" loading="lazy" on:error={() => (mediaErr = true)} />
+        {:else if imgSrc}
+          <img class="media-img" src={imgSrc} alt="" loading="lazy" on:error={() => { if (!mediaErr) mediaErr = true; }} />
         {:else}
           <div class="img-ph">
             <span class="ph-dl"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span>

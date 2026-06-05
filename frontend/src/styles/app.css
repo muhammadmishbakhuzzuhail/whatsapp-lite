@@ -249,10 +249,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .ticks.read { stroke: var(--tick); }
 
 .quote { border-left: 4px solid var(--quote-bar); background: var(--quote-bg);
-  border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; overflow: hidden; }
-.quote-name { font-size: 13px; font-weight: 600; color: var(--quote-bar); }
+  border-radius: 4px; padding: 5px 9px; margin-bottom: 5px; overflow: hidden;
+  max-width: 340px; }
+.quote-name { font-size: 13px; font-weight: 600; color: var(--quote-bar);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Pratinjau kutipan SELALU 1 baris (apa pun panjang/multi-baris aslinya). */
 .quote-text { font-size: 13px; color: var(--text2); white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; }
+  overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+
+/* Media + kutipan/nama/caption → beri padding agar tak menempel tepi & ada
+   jarak ke gambar. (Bubble media transparan padding:0 by default.) */
+.bubble.media .quote { margin: 4px 4px 6px; }
+.bubble.media .sender { margin: 2px 4px 6px; display: inline-block; }
+.bubble.media .forwarded { margin: 2px 4px; }
 
 /* MEDIA: bubble transparan (tanpa kartu), box PERSEGI tetap, isi center +
    rasio dijaga (contain) → rasio beda = gap TRANSPARAN (tak ada bg putih).
@@ -264,11 +273,13 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .bubble.sticker-bubble .meta { position: absolute; right: 6px; bottom: 6px;
   background: rgba(0,0,0,.45); color: #fff; border-radius: 8px; padding: 1px 6px; }
 
+/* Box PERSEGI konsisten apa pun lebar pane → aspect-ratio:1 (bukan height tetap
+   + max-width yg bikin portrait di pane sempit). */
 .media-box { position: relative; cursor: pointer; background: transparent;
-  width: 340px; height: 340px; max-width: 72vw; }
+  width: min(340px, 68vw); aspect-ratio: 1; }
 .media-img { display: block; width: 100%; height: 100%;
-  object-fit: contain; background: transparent; }
-.media-box.sticker { width: 160px; height: 160px; }
+  object-fit: contain; background: transparent; border-radius: 10px; }
+.media-box.sticker { width: 160px; }
 
 /* Placeholder (belum diunduh): mengisi box, transparan + ikon unduh di tengah. */
 .img-ph { width: 100%; height: 100%; display: flex; flex-direction: column;
@@ -702,9 +713,10 @@ button.info-row:hover { background: var(--hover); }
   background: var(--in-bg); color: var(--text); padding: 6px 9px; border-radius: 8px; box-shadow: var(--shadow); }
 .msg.out .bubble.media .text.caption { background: var(--out-bg); }
 
-/* Pada media transparan: hanya NAMA pengirim yang diberi pill (bukan kartu di belakang gambar). */
+/* Pada media transparan: hanya NAMA pengirim yang diberi pill (bukan kartu di belakang gambar).
+   margin-bottom besar → ada GAP jelas antara pill nama & stiker/gambar. */
 .bubble.sticker-bubble .sender { display: inline-block; background: var(--in-bg);
-  padding: 3px 9px; border-radius: 8px; margin-bottom: 4px; box-shadow: var(--shadow); }
+  padding: 3px 9px; border-radius: 8px; margin: 0 0 7px; box-shadow: var(--shadow); }
 [data-theme="dark"] .bubble.sticker-bubble .sender { background: var(--in-bg); }
 
 /* Baris hasil (search + berbintang) — global agar dipakai ChatList & StarredPane. */

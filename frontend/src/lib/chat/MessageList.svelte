@@ -134,7 +134,7 @@
     {/each}
   </div>
   {#if !atBottom}
-    <button class="scroll-fab" on:click={() => toBottom()} aria-label={$t("scroll_bottom")}>
+    <button class="scroll-fab" on:click={() => { atBottom = true; toBottom(); }} aria-label={$t("scroll_bottom")}>
       <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </button>
   {/if}
