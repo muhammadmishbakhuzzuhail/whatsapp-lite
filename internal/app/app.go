@@ -188,11 +188,13 @@ func (a *App) wireEvents(eng *engine.Engine, store *storage.Store) {
 		runtime.EventsEmit(a.ctx, "wa:typing", map[string]interface{}{"chat": chat, "on": composing})
 	})
 	eng.OnReceipt(func(chat, sender string, ids []string, status string, ts time.Time) {
+		// Tulis DB di goroutine: handler whatsmeow dipanggil sinkron di loop baca
+		// node; receipt grup = puluhan id × banyak penerima → blok socket → EOF.
 		if a.store != nil && len(ids) > 0 {
-			_ = a.store.SetMessageStatus(a.ctx, chat, ids, status)
-			for _, id := range ids {
-				_ = a.store.SetReceipt(a.ctx, chat, id, sender, status, ts)
-			}
+			go func() {
+				_ = a.store.SetMessageStatus(a.ctx, chat, ids, status)
+				_ = a.store.SetReceipts(a.ctx, chat, ids, sender, status, ts)
+			}()
 		}
 		runtime.EventsEmit(a.ctx, "wa:receipt", map[string]interface{}{
 			"chat": chat, "ids": ids, "status": status,

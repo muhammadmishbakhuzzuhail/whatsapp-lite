@@ -13,10 +13,10 @@
   import ReactionPicker from "./lib/chat/ReactionPicker.svelte";
   import NewChatModal from "./lib/sidebar/NewChatModal.svelte";
   import Toast from "./lib/Toast.svelte";
-  import { theme, infoOpen, loggedIn, lockState, inChatSearch, activeChatId, newChatOpen, lightbox, forwardDraft, profileJid } from "./stores.js";
+  import { effectiveTheme, infoOpen, loggedIn, lockState, inChatSearch, activeChatId, newChatOpen, lightbox, forwardDraft, profileJid } from "./stores.js";
   import { locale } from "./lib/i18n.js";
 
-  $: document.documentElement.setAttribute("data-theme", $theme);
+  $: document.documentElement.setAttribute("data-theme", $effectiveTheme);
   $: document.documentElement.setAttribute("lang", $locale);
 
   // Shortcut keyboard global.

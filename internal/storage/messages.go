@@ -240,6 +240,37 @@ ON CONFLICT(chat_jid, msg_id, recipient) DO UPDATE SET
 	return err
 }
 
+// SetReceipts mencatat tanda terima satu penerima atas BANYAK pesan sekaligus
+// dalam SATU transaksi. Receipt grup bisa berisi puluhan id; menulisnya satu
+// per satu = puluhan fsync sinkron yang memblok loop baca socket whatsmeow
+// (gejala: "Node handling took 9s" lalu websocket EOF). Batch → 1 fsync.
+func (s *Store) SetReceipts(ctx context.Context, chatJID string, ids []string, recipient, status string, ts time.Time) error {
+	if recipient == "" || len(ids) == 0 || (status != "delivered" && status != "read") {
+		return nil
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.PrepareContext(ctx, `
+INSERT INTO receipts (chat_jid, msg_id, recipient, status, ts)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(chat_jid, msg_id, recipient) DO UPDATE SET
+	status = CASE WHEN excluded.status = 'read' THEN 'read' ELSE receipts.status END,
+	ts     = excluded.ts`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	for _, id := range ids {
+		if _, err := stmt.ExecContext(ctx, chatJID, id, recipient, status, ts.Unix()); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
 // ListReceipts mengembalikan tanda terima sebuah pesan (terbaru dulu).
 func (s *Store) ListReceipts(ctx context.Context, chatJID, msgID string) ([]Receipt, error) {
 	rows, err := s.db.QueryContext(ctx,

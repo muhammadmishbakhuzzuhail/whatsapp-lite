@@ -196,9 +196,13 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 /* ---------- PERCAKAPAN ---------- */
 .conversation { flex: 1; min-width: 0; display: flex; flex-direction: column;
   position: relative; /* anchor popup composer (attach/emoji/gif/stiker) ke kolom chat */
-  background-color: var(--wallpaper);
-  background-image: var(--wa-doodle);
-  background-size: 412px auto; background-repeat: repeat; }
+  /* Tema chat: warna solid (--chat-bg-col) + doodle opsional (--chat-doodle) di
+     atas, atau gradien (--chat-bg-img) sbg layer bawah. Lihat stores.applyChatTheme. */
+  background-color: var(--chat-bg-col, var(--wallpaper));
+  background-image: var(--chat-doodle, var(--wa-doodle)), var(--chat-bg-img, none);
+  background-repeat: repeat, no-repeat;
+  background-size: 412px auto, cover;
+  background-position: top left, center; }
 .empty-conv { flex: 1; display: grid; align-items: center; justify-items: center; color: var(--text2);
   text-align: center; padding: 24px; }
 .conv-head { height: 60px; padding: 0 18px; background: var(--head-bg); border-bottom: 1px solid var(--divider);
@@ -828,13 +832,21 @@ button.info-row:hover { background: var(--hover); }
 .sc-count { font-size:12.5px; color:var(--text2); min-width:38px; text-align:right; }
 .sc-bar .icon-btn svg { width:18px; height:18px; }
 
-/* Wallpaper chat (var --chat-bg di-set dari store) */
-.messages { background: var(--chat-bg, transparent); }
+/* Latar chat di-set pada .conversation (tema chat); .messages transparan agar
+   warna/doodle tembus. */
+.messages { background: transparent; }
 
-/* Pemilih wallpaper di Settings */
-.wp-swatches { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
-.wp-sw { width:30px; height:30px; border-radius:8px; border:2px solid var(--line); cursor:pointer; display:grid; align-items:center;justify-items:center; color:var(--text2); font-size:13px; }
-.wp-sw.on { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent); }
+/* Pemilih tema chat & mode app di Settings */
+.theme-modes { display:flex; gap:6px; margin-top:8px; }
+.theme-mode { flex:1; padding:7px 4px; border-radius:9px; border:1px solid var(--line); background:var(--bg2);
+  color:var(--text2); cursor:pointer; font:inherit; font-size:13px; text-align:center; }
+.theme-mode.on { border-color:var(--accent); color:var(--text); background:color-mix(in srgb,var(--accent) 12%,transparent); }
+.ct-swatches { display:flex; flex-wrap:wrap; gap:9px; margin-top:8px; }
+.ct-sw { width:38px; height:54px; border-radius:9px; border:2px solid var(--line); cursor:pointer; padding:0;
+  position:relative; overflow:hidden; background-size:cover; background-position:center; }
+.ct-sw.on { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent); }
+.ct-sw .ct-name { position:absolute; left:0; right:0; bottom:0; font-size:9px; line-height:1.4; text-align:center;
+  background:rgba(0,0,0,.35); color:#fff; }
 
 /* Poll bar hasil */
 .poll-opt { position:relative; overflow:hidden; }

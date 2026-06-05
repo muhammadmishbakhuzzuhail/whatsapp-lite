@@ -1,12 +1,14 @@
-import { writable, get } from "svelte/store";
+import { writable, get, derived } from "svelte/store";
 import * as data from "./services/data.js";
 import { t } from "./lib/i18n.js";
+import { chatThemeById } from "./lib/chatThemes.js";
 const tr = (k) => get(t)(k);
 
 const params = new URLSearchParams(location.search);
 let storedTheme = null;
 try { storedTheme = localStorage.getItem("wa-theme"); } catch (e) {}
-const initialTheme = params.get("theme") || storedTheme || "light";
+// Tema app: "light" | "dark" | "system" (ikuti OS).
+const initialTheme = params.get("theme") || storedTheme || "system";
 const chatParam = params.get("chat");
 
 export const chats = writable([]);
@@ -15,6 +17,18 @@ export const search = writable("");
 export const filter = writable("Semua");
 export const theme = writable(initialTheme);
 theme.subscribe((v) => { try { localStorage.setItem("wa-theme", v); } catch (e) {} });
+
+// Preferensi OS (dark?) — reaktif terhadap perubahan sistem saat theme="system".
+const _mql = typeof matchMedia !== "undefined" ? matchMedia("(prefers-color-scheme: dark)") : null;
+export const systemDark = writable(_mql ? _mql.matches : false);
+if (_mql) {
+  const onCh = (e) => systemDark.set(e.matches);
+  _mql.addEventListener ? _mql.addEventListener("change", onCh) : _mql.addListener(onCh);
+}
+// Tema efektif yg dipasang ke <html data-theme> ("light"|"dark").
+export const effectiveTheme = derived([theme, systemDark], ([$t, $sd]) =>
+  $t === "system" ? ($sd ? "dark" : "light") : $t
+);
 
 // Bahasa TUJUAN terjemahan pesan (deteksi sumber otomatis). Default: bahasa app.
 let storedTrLang = null;
@@ -35,14 +49,26 @@ export const mediaDraft = writable(null);
 // Pencarian dalam satu chat (toggle dari header).
 export const inChatSearch = writable(false);
 
-// Wallpaper chat (CSS warna/gradien). Persist + terapkan ke --chat-bg.
-let storedWp = null;
-try { storedWp = localStorage.getItem("wa-wallpaper"); } catch (e) {}
-export const wallpaper = writable(storedWp || "");
-wallpaper.subscribe((v) => {
-  try { localStorage.setItem("wa-wallpaper", v); } catch (e) {}
-  if (typeof document !== "undefined") document.documentElement.style.setProperty("--chat-bg", v || "transparent");
-});
+// Tema latar chat (kurasi ala WhatsApp, lihat lib/chatThemes.js). Persist id.
+let storedChatTheme = null;
+try { storedChatTheme = localStorage.getItem("wa-chat-theme"); } catch (e) {}
+export const chatTheme = writable(storedChatTheme || "default");
+chatTheme.subscribe((v) => { try { localStorage.setItem("wa-chat-theme", v); } catch (e) {} });
+
+// Terapkan warna/doodle latar chat sesuai (tema chat × mode app aktif).
+function applyChatTheme(id, dark) {
+  if (typeof document === "undefined") return;
+  const th = chatThemeById(id);
+  const bg = dark ? th.dark : th.light;
+  const root = document.documentElement.style;
+  // Gradien hanya valid sbg background-image; warna solid sbg background-color.
+  const isGrad = /gradient\(/.test(bg);
+  root.setProperty("--chat-bg-col", isGrad ? "transparent" : bg);
+  root.setProperty("--chat-bg-img", isGrad ? bg : "none");
+  root.setProperty("--chat-doodle", th.doodle ? "var(--wa-doodle)" : "none");
+}
+derived([chatTheme, effectiveTheme], ([$ct, $et]) => [$ct, $et])
+  .subscribe(([ct, et]) => applyChatTheme(ct, et === "dark"));
 
 // Suara notifikasi (WebAudio, tanpa aset). Persist.
 let storedSound = null;

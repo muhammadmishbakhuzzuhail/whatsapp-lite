@@ -1,14 +1,15 @@
 <script>
-  import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, wallpaper } from "../../stores.js";
-  const WALLPAPERS = ["", "#0b141a", "#1f2c34", "#0c1f1a", "linear-gradient(135deg,#0b141a,#1f3a34)", "#ece5dd", "#e3dccb", "linear-gradient(135deg,#dfe9f3,#e2d1c3)"];
+  import { railView, theme, effectiveTheme, chatTheme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn } from "../../stores.js";
+  import { CHAT_THEMES, chatThemeSwatch } from "../chatThemes.js";
   import { getProfile, getSettingsItems } from "../../services/data.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import { initial } from "../util.js";
   import { t, locale, languages } from "../i18n.js";
   const me = getProfile();
   const settingsItems = getSettingsItems();
-  const toggleTheme = () => theme.update((v) => (v === "dark" ? "light" : "dark"));
+  const THEME_MODES = ["light", "dark", "system"];
   const toggleLock = () => ($pinSet ? removePin() : beginSetPin());
+  $: ctDark = $effectiveTheme === "dark";
 
   const icons = {
     key: '<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4"/><path d="M11 11l8 8M16 16l2-2M19 19l2-2"/></svg>',
@@ -46,14 +47,17 @@
       </div>
     {/each}
 
-    <!-- Tema (terang/gelap) -->
-    <div class="settings-item" role="button" tabindex="0" on:click={toggleTheme} on:keydown={(e) => e.key === "Enter" && toggleTheme()}>
+    <!-- Tema app (terang / gelap / ikuti sistem) -->
+    <div class="settings-item" style="align-items:flex-start">
       {@html icons.theme}
       <div class="grow">
         <div class="si-name">{$t("theme")}</div>
-        <div class="si-desc">{$theme === "dark" ? $t("theme_dark") : $t("theme_light")}</div>
+        <div class="theme-modes">
+          {#each THEME_MODES as m}
+            <button class="theme-mode {$theme === m ? 'on' : ''}" on:click={() => theme.set(m)}>{$t("theme_" + m)}</button>
+          {/each}
+        </div>
       </div>
-      <span class="switch {$theme === 'dark' ? '' : 'off'}"></span>
     </div>
 
     <!-- Pemilih bahasa (i18n) -->
@@ -79,14 +83,17 @@
       </select>
     </div>
 
-    <!-- Wallpaper chat -->
+    <!-- Tema latar chat (kurasi ala WhatsApp) -->
     <div class="settings-item" style="align-items:flex-start">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="9" cy="9" r="1.5"/></svg>
       <div class="grow">
-        <div class="si-name">{$t("wallpaper")}</div>
-        <div class="wp-swatches">
-          {#each WALLPAPERS as wp}
-            <button class="wp-sw {$wallpaper === wp ? 'on' : ''}" style="background:{wp || 'transparent'}" title={wp || $t("wp_none")} on:click={() => wallpaper.set(wp)}>{wp === "" ? "∅" : ""}</button>
+        <div class="si-name">{$t("chat_theme")}</div>
+        <div class="ct-swatches">
+          {#each CHAT_THEMES as ct}
+            <button class="ct-sw {$chatTheme === ct.id ? 'on' : ''}" title={ct.label}
+              style="background:{chatThemeSwatch(ct.id, ctDark)}" on:click={() => chatTheme.set(ct.id)}>
+              <span class="ct-name">{ct.label}</span>
+            </button>
           {/each}
         </div>
       </div>
