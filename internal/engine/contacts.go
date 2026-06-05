@@ -41,10 +41,10 @@ func (e *Engine) ContactJIDs() []string {
 		if jid.Server != types.DefaultUserServer { // hanya nomor telepon nyata
 			continue
 		}
-		if !info.Found {
-			continue
-		}
-		if info.FullName == "" && info.FirstName == "" && info.PushName == "" && info.BusinessName == "" {
+		// HANYA yang TERSIMPAN di buku-alamat (punya FullName/FirstName dari
+		// sinkron app-state). PushName/BusinessName saja = sekadar terlihat di
+		// grup → BUKAN kontak HP. Tanpa filter ini, semua anggota grup ikut masuk.
+		if info.FullName == "" && info.FirstName == "" {
 			continue
 		}
 		out = append(out, jid.String())
