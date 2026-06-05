@@ -1,7 +1,7 @@
 <script>
   import Bubble from "./Bubble.svelte";
   import { t } from "../i18n.js";
-  import { tick } from "svelte";
+  import { tick, beforeUpdate, afterUpdate } from "svelte";
   import { loadOlder, jumpMsg } from "../../stores.js";
   export let messages = [];
   export let group = false;
@@ -17,13 +17,53 @@
   let _floatTimer;
   $: chatId, (noMore = false, newCount = 0); // reset saat ganti chat
 
+  // === Scroll behavior (pola kanonik beforeUpdate/afterUpdate) ===
+  // follow=true → "menempel" ke bawah (ikut pesan baru). User scroll-up → false.
+  let follow = true;
+  let snapNearBottom = true;     // snapshot SEBELUM DOM update
+  let prevChat = null, prevLastId = null, prevLen = 0;
+
+  function nearBottom() {
+    return box ? box.scrollHeight - box.scrollTop - box.clientHeight < 80 : true;
+  }
+  function pin() { if (box) box.scrollTop = box.scrollHeight; }
+
   function onScroll() {
     if (!box) return;
-    atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
-    if (atBottom) newCount = 0;
+    follow = nearBottom();            // user di bawah → ikut; scroll-up → lepas
+    atBottom = follow;
+    if (follow) newCount = 0;
     if (box.scrollTop < 120) maybeLoadOlder();
     updateFloatDate();
   }
+
+  beforeUpdate(() => { snapNearBottom = nearBottom(); });
+
+  afterUpdate(() => {
+    if (!box) return;
+    const last = messages.length ? messages[messages.length - 1] : null;
+    const lastId = last ? last.id || "" : "";
+    const lastMine = last ? last.dir === "out" : false;
+
+    if (chatId !== prevChat) {            // (1) buka chat → ke bawah
+      prevChat = chatId; prevLastId = lastId; prevLen = messages.length;
+      follow = true; atBottom = true; newCount = 0;
+      pin(); requestAnimationFrame(pin); setTimeout(pin, 120); setTimeout(pin, 350);
+      return;
+    }
+    const isNew = lastId !== prevLastId;  // pesan BARU di ujung (bukan reaksi/edit/prepend)
+    const added = Math.max(0, messages.length - prevLen);
+    prevLastId = lastId; prevLen = messages.length;
+    if (!isNew) return;                   // (7) reaksi/edit/receipt → diam
+
+    if (lastMine) {                       // (4) kirim sendiri → SELALU ke bawah
+      follow = true; atBottom = true; newCount = 0; pin();
+    } else if (snapNearBottom) {          // (2) di bawah + pesan baru → ikut
+      atBottom = true; newCount = 0; pin();
+    } else {                              // (3) scroll-up + pesan baru → diam + badge
+      newCount += added || 1;
+    }
+  });
   // Tanggal pesan teratas yang terlihat → pil mengambang (Telegram-style).
   function updateFloatDate() {
     if (!box) return;
@@ -105,40 +145,6 @@
     return out;
   }
 
-  // Scroll cerdas: HANYA turun otomatis saat (a) buka chat, atau (b) ada pesan
-  // BARU di ujung & user sedang di bawah. Re-sync data sama TIDAK menyentak
-  // (cegah "scroll terus-menerus" saat sinkronisasi). Kalau user scroll ke atas,
-  // tombol kanan-bawah muncul untuk turun manual.
-  let curChat = null, lastCount = 0, lastId = "";
-  $: handleScroll(chatId, items, box);
-  function handleScroll(cid, it, b) {
-    if (!b) return;
-    const id = it.length ? it[it.length - 1].m.id || "" : "";
-    if (cid !== curChat) { // chat berganti → reset + ke bawah
-      curChat = cid; lastCount = it.length; lastId = id; atBottom = true;
-      tick().then(() => toBottom(false));
-      return;
-    }
-    // grew = ADA pesan baru di ujung (id terakhir berubah), BUKAN sekadar jumlah
-    // berubah (prepend riwayat / reaksi / edit / receipt tak boleh memicu scroll).
-    const grew = id !== lastId && it.length >= lastCount;
-    const added = Math.max(0, it.length - lastCount);
-    const lastM = it.length ? it[it.length - 1].m : null;
-    lastCount = it.length; lastId = id;
-    if (!grew) return; // reaksi/edit/receipt/reload-sama → DIAM (poin 7)
-    // Pesan SENDIRI (out) → SELALU turun ke bawah, apa pun posisi (poin 4).
-    const mine = lastM && lastM.dir === "out";
-    // Ukur posisi LANGSUNG dari box SEBELUM node baru menambah tinggi → ikut
-    // turun hanya bila memang sedang di bawah (poin 2). Scroll-up → diam (poin 3).
-    const nearBottom = b.scrollHeight - b.scrollTop - b.clientHeight < 80;
-    if (mine || nearBottom) {
-      atBottom = true; newCount = 0;
-      tick().then(() => toBottom(false));
-    } else {
-      newCount += added || 1; // badge pesan baru di FAB (poin 3)
-    }
-  }
-
   // Lompat + highlight ke pesan (dari hasil pencarian). Best-effort: hanya bila
   // pesannya termuat (dalam ~200 terakhir); kalau tidak, biarkan di posisi bawah.
   $: if ($jumpMsg && box && items) tick().then(() => flashTo($jumpMsg));
@@ -174,7 +180,7 @@
     {/each}
   </div>
   {#if !atBottom}
-    <button class="scroll-fab" on:click={() => { atBottom = true; newCount = 0; toBottom(); }} aria-label={$t("scroll_bottom")}>
+    <button class="scroll-fab" on:click={() => { follow = true; atBottom = true; newCount = 0; toBottom(); }} aria-label={$t("scroll_bottom")}>
       {#if newCount > 0}<span class="fab-badge">{newCount > 99 ? "99+" : newCount}</span>{/if}
       <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </button>
