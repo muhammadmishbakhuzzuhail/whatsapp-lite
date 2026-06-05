@@ -16,6 +16,7 @@
   --head-bg: #ffffff;
   --search-bg: #eef1f6;
   --wallpaper: #eef1f6;
+  --doodle-wash: rgba(238,241,246,.6); /* wash di atas doodle → kurangi kontras */
   --wa-doodle: url("../assets/doodle-light.png");
   --in-bg: #ffffff;
   --out-bg: #d6f3c4;
@@ -54,6 +55,7 @@
   --head-bg: #11171e;
   --search-bg: #1b232b;
   --wallpaper: #0a0f14;
+  --doodle-wash: rgba(10,15,20,.55); /* wash di atas doodle → kurangi kontras */
   --wa-doodle: url("../assets/doodle-dark.png");
   --in-bg: #1d262e;
   --out-bg: #114b39;
@@ -213,12 +215,13 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
   position: relative; /* anchor popup composer (attach/emoji/gif/stiker) ke kolom chat */
   /* min-height:0 + overflow:hidden → HANYA .messages yang scroll (cegah scrollbar
      ke-2 dari .conversation yang menggeser scrollbar pesan ke dalam). */
-  /* Latar doodle WhatsApp default (light/dark via --wa-doodle). */
+  /* Latar doodle WhatsApp default (light/dark via --wa-doodle), diredam wash
+     warna wallpaper semi-transparan di lapisan atas agar tak terlalu kontras. */
   background-color: var(--wallpaper);
-  background-image: var(--wa-doodle);
-  background-repeat: repeat;
-  background-size: 412px auto;
-  background-position: top left; }
+  background-image: linear-gradient(var(--doodle-wash), var(--doodle-wash)), var(--wa-doodle);
+  background-repeat: no-repeat, repeat;
+  background-size: cover, 412px auto;
+  background-position: center, top left; }
 .empty-conv { flex: 1; display: grid; align-items: center; justify-items: center; color: var(--text2);
   text-align: center; padding: 24px; }
 .conv-head { height: 60px; padding: 0 18px; background: var(--head-bg); border-bottom: 1px solid var(--divider);
