@@ -97,9 +97,14 @@
       tick().then(() => toBottom(false));
       return;
     }
-    const grew = it.length > lastCount || id !== lastId;
+    // grew = ADA pesan baru di ujung (id terakhir berubah), BUKAN sekadar jumlah
+    // berubah (prepend riwayat / reaksi / reload tak boleh memicu auto-scroll).
+    const grew = id !== lastId && it.length >= lastCount;
     lastCount = it.length; lastId = id;
-    if (grew && atBottom) tick().then(() => toBottom(false));
+    // Ukur posisi LANGSUNG dari box (bukan var atBottom yg bisa basi) SEBELUM
+    // node baru menambah tinggi → hanya ikut turun bila memang sedang di bawah.
+    const nearBottom = b.scrollHeight - b.scrollTop - b.clientHeight < 80;
+    if (grew && nearBottom) tick().then(() => toBottom(false));
   }
 
   // Lompat + highlight ke pesan (dari hasil pencarian). Best-effort: hanya bila

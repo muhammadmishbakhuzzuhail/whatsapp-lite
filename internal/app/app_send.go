@@ -321,7 +321,7 @@ func (a *App) SendGif(jid, dataURI string) string {
 		return ""
 	}
 	_ = a.store.SaveMessage(a.ctx, storage.Message{
-		ID: id, ChatJID: jid, Kind: "video", Thumb: dataURI, Timestamp: time.Now(), FromMe: true,
+		ID: id, ChatJID: jid, Kind: "gif", Thumb: dataURI, Timestamp: time.Now(), FromMe: true,
 	})
 	runtime.EventsEmit(a.ctx, "wa:message", jid)
 	return id

@@ -322,7 +322,11 @@ func describeMessage(msg *waE2E.Message) (kind, text, thumb, media string) {
 	case msg.GetImageMessage() != nil:
 		return "image", msg.GetImageMessage().GetCaption(), jpeg(msg.GetImageMessage().GetJPEGThumbnail()), ser()
 	case msg.GetVideoMessage() != nil:
-		return "video", msg.GetVideoMessage().GetCaption(), jpeg(msg.GetVideoMessage().GetJPEGThumbnail()), ser()
+		vm := msg.GetVideoMessage()
+		if vm.GetGifPlayback() {
+			return "gif", vm.GetCaption(), jpeg(vm.GetJPEGThumbnail()), ser()
+		}
+		return "video", vm.GetCaption(), jpeg(vm.GetJPEGThumbnail()), ser()
 	case msg.GetStickerMessage() != nil:
 		return "sticker", "", jpeg(msg.GetStickerMessage().GetPngThumbnail()), ser()
 	case msg.GetAudioMessage() != nil:

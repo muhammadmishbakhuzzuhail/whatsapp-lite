@@ -14,10 +14,10 @@
   export let idx;
   export let peerName = "";
 
-  $: isMedia = msg.type === "image" || msg.type === "video" || msg.type === "sticker";
-  // Stiker → bubble TRANSPARAN (tanpa kartu). Foto/video → KARTU (bg + padding
-  // tipis), rasio natural (min/max), caption di bawah gambar.
-  $: bubbleClass = msg.type === "sticker"
+  $: isMedia = msg.type === "image" || msg.type === "video" || msg.type === "sticker" || msg.type === "gif";
+  // Stiker & GIF → bubble TRANSPARAN (tanpa kartu putih, hanya nama yg ber-pill).
+  // Foto/video → KARTU (bg + padding tipis), rasio natural (min/max), caption di bawah.
+  $: bubbleClass = (msg.type === "sticker" || msg.type === "gif")
     ? "media sticker-bubble"
     : (msg.type === "image" || msg.type === "video")
       ? "media imgcard"
@@ -118,6 +118,14 @@
 
   // --- context menu & aksi ---
   let menuOpen = false;
+  let menuUp = false; // buka ke ATAS bila pesan dekat bawah viewport
+  function toggleMenu(e) {
+    if (!menuOpen) {
+      const r = e.currentTarget.getBoundingClientRect();
+      menuUp = r.bottom > window.innerHeight * 0.55;
+    }
+    menuOpen = !menuOpen;
+  }
   let emojiMore = false;
   const QUICK = ["❤️", "😂", "👍", "😮", "😢", "🙏"];
   const MORE = "😀 😅 😊 😍 🥰 😘 🤔 😎 🥳 😇 🙂 😉 😋 😜 🤩 🥺 😢 😭 😡 😱 😴 🤯 🤗 🙏 👍 👎 👏 🙌 💪 🔥 ✨ 🎉 ❤️ 🧡 💛 💚 💙 💜 🖤 💔 💯 ✅ ❌ ⭐ 👀 🤝 🎁 🍕 ☕".split(" ");
@@ -190,7 +198,7 @@
 
   <div class="bubble {bubbleClass} {msg.type === 'deleted' ? 'deleted' : ''}">
     {#if msg.type !== "deleted"}
-      <button class="msg-menu-btn" aria-label={$t("menu")} on:click={() => (menuOpen = !menuOpen)}>
+      <button class="msg-menu-btn" aria-label={$t("menu")} on:click={toggleMenu}>
         <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>
       </button>
     {/if}
@@ -229,7 +237,9 @@
     {:else if isMedia}
       <div class="media-box {msg.type === 'sticker' ? 'sticker' : 'card'}"
         role="button" tabindex="0" on:click={openMedia}>
-        {#if msg.type === "video" && videoPlaying}
+        {#if msg.type === "gif"}
+          <video class="media-img" src={mediaUrl} autoplay loop muted playsinline></video>
+        {:else if msg.type === "video" && videoPlaying}
           <video class="media-img" src={mediaUrl} controls autoplay></video>
         {:else if imgSrc}
           <img class="media-img" src={imgSrc} alt="" loading="lazy" on:error={() => { if (!mediaErr) mediaErr = true; }} />
@@ -304,7 +314,7 @@
     {/if}
 
     {#if menuOpen}
-      <div class="msg-menu">
+      <div class="msg-menu {menuUp ? 'up' : ''}">
         <div class="react-row">
           {#each QUICK as e}<button class="rx" on:click={() => react(e)}>{e}</button>{/each}
           <button class="rx rx-more" on:click|stopPropagation={() => (emojiMore = !emojiMore)} aria-label={$t("emoji")}>+</button>
