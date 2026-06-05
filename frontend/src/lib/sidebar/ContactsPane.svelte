@@ -52,15 +52,16 @@
   }
   const isOnline = (jid) => $chatStatus[jid] === "online";
 
-  function saveNew() {
-    const num = prompt($t("contact_new_number"));
-    if (!num) return;
-    const digits = num.replace(/[^0-9]/g, "");
-    if (digits.length < 6) { pushToast($t("err_generic")); return; }
-    const name = prompt($t("save_contact_prompt"));
-    if (!name || !name.trim()) return;
-    saveContactLabel(digits + "@s.whatsapp.net", name.trim());
-    pushToast($t("contact_saved").replace("%s", name.trim()), "ok");
+  // Modal simpan kontak baru (prompt() tak jalan di WebKitGTK → pakai modal).
+  let newOpen = false, newName = "", newNum = "";
+  function openNew() { newOpen = true; newName = ""; newNum = ""; }
+  $: newDigits = newNum.replace(/[^0-9]/g, "");
+  $: newValid = newDigits.length >= 6 && newName.trim().length > 0;
+  function submitNew() {
+    if (!newValid) return;
+    saveContactLabel(newDigits + "@s.whatsapp.net", newName.trim());
+    pushToast($t("contact_saved").replace("%s", newName.trim()), "ok");
+    newOpen = false;
     setTimeout(load, 400);
   }
 </script>
@@ -68,7 +69,7 @@
 <header class="pane-head"><h2>{$t("rail_contacts")}</h2></header>
 <div class="ct-top">
   <input class="ct-search" placeholder={$t("search")} bind:value={q} />
-  <button class="ct-new" on:click={saveNew} title={$t("contact_save_new")}>
+  <button class="ct-new" on:click={openNew} title={$t("contact_save_new")}>
     <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 20c0-3.5 3-6 7-6M17 11v6M14 14h6"/></svg>
     <span>{$t("contact_save_new")}</span>
   </button>
@@ -96,6 +97,24 @@
   {/each}
   {#if filtered.length === 0}<div class="ct-empty">{$t("no_match")}</div>{/if}
 </div>
+
+{#if newOpen}
+  <div class="nc-modal" role="presentation" on:click|self={() => (newOpen = false)}>
+    <div class="nc-card" style="max-width:380px">
+      <h3 style="margin:0 0 14px">{$t("contact_save_new")}</h3>
+      <label class="poll-lbl">{$t("profile_phone")}</label>
+      <input class="poll-in" type="tel" inputmode="tel" placeholder="62812…" bind:value={newNum}
+        on:keydown={(e) => e.key === "Enter" && newValid && submitNew()} />
+      <label class="poll-lbl">{$t("save_contact_prompt")}</label>
+      <input class="poll-in" placeholder={$t("profile_name")} bind:value={newName}
+        on:keydown={(e) => e.key === "Enter" && newValid && submitNew()} />
+      <div class="poll-foot">
+        <button class="btn-ghost" on:click={() => (newOpen = false)}>{$t("cancel")}</button>
+        <button class="btn-accent" on:click={submitNew} disabled={!newValid}>{$t("save")}</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .ct-top { display: flex; gap: 8px; padding: 6px 12px 10px; align-items: center; }

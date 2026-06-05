@@ -14,14 +14,15 @@
     prof = await getContactProfile(jid);
   }
 
+  // prompt() tak jalan di WebKitGTK → modal inline.
+  let renameOpen = false, renameVal = "";
+  function openSave() { renameVal = prof?.name || ""; renameOpen = true; }
   function doSave() {
-    if (!prof) return;
-    const name = prompt($t("save_contact_prompt"), prof.name || "");
-    if (name === null) return;
-    const v = name.trim();
-    if (!v) return;
+    const v = renameVal.trim();
+    if (!prof || !v) return;
     saveContactLabel(prof.jid, v);
     prof = { ...prof, name: v, saved: true };
+    renameOpen = false;
     pushToast($t("contact_saved").replace("%s", v), "ok");
   }
   function doRemove() {
@@ -69,7 +70,7 @@
           <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg>
           <span class="grow">{$t("message_action")}</span>
         </button>
-        <button class="info-row" on:click={doSave}>
+        <button class="info-row" on:click={openSave}>
           <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 20c0-3.5 3-6 7-6M17 11v6M14 14h6"/></svg>
           <span class="grow">{prof.saved ? $t("rename_contact") : $t("save_contact")}</span>
         </button>
@@ -85,6 +86,20 @@
       <div class="prof-loading">…</div>
     {/if}
   </aside>
+{/if}
+
+{#if renameOpen}
+  <div class="nc-modal" role="presentation" on:click|self={() => (renameOpen = false)}>
+    <div class="nc-card" style="max-width:360px">
+      <h3 style="margin:0 0 14px">{prof?.saved ? $t("rename_contact") : $t("save_contact")}</h3>
+      <input class="poll-in" placeholder={$t("profile_name")} bind:value={renameVal}
+        on:keydown={(e) => e.key === "Enter" && doSave()} />
+      <div class="poll-foot">
+        <button class="btn-ghost" on:click={() => (renameOpen = false)}>{$t("cancel")}</button>
+        <button class="btn-accent" on:click={doSave} disabled={!renameVal.trim()}>{$t("save")}</button>
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>
