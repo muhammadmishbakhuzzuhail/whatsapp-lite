@@ -215,6 +215,10 @@ export async function getPollVotes(pollID) {
   if (LIVE) return (await A.GetPollVotes(pollID)) || { counts: {}, total: 0 };
   return { counts: {}, total: 0 };
 }
+export async function exportChat(jid) {
+  if (LIVE) return A.ExportChat(jid);
+  return "";
+}
 
 // --- Kelola chat (Tier 2) ---
 export function pin(jid, on) {

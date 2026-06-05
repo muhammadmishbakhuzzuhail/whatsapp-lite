@@ -95,7 +95,6 @@ Mode verbose (debug log): `WALITE_DEBUG=1 wails dev`
 ## Belum diimplementasikan
 
 Bisa dikerjakan (belum):
-- **Ekspor chat** (ke .txt/zip).
 - **Pencarian/kategori di emoji picker** (butuh dataset emoji).
 
 ## Keterbatasan (tidak bisa di sisi klien)

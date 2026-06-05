@@ -19,6 +19,8 @@ export function DownloadMedia(arg1:string,arg2:string):Promise<string>;
 
 export function EditMessage(arg1:string,arg2:string,arg3:string):Promise<void>;
 
+export function ExportChat(arg1:string):Promise<string>;
+
 export function FollowChannel(arg1:string):Promise<app.ChannelDTO>;
 
 export function Forward(arg1:string,arg2:string,arg3:string):Promise<string>;

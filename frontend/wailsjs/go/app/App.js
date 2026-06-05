@@ -34,6 +34,10 @@ export function EditMessage(arg1, arg2, arg3) {
   return window['go']['app']['App']['EditMessage'](arg1, arg2, arg3);
 }
 
+export function ExportChat(arg1) {
+  return window['go']['app']['App']['ExportChat'](arg1);
+}
+
 export function FollowChannel(arg1) {
   return window['go']['app']['App']['FollowChannel'](arg1);
 }

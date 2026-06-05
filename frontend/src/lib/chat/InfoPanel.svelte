@@ -1,7 +1,7 @@
 <script>
   import Avatar from "../common/Avatar.svelte";
   import { chats, activeChatId, infoOpen, blockContact, leaveGroup, fetchGroupInfo, pushToast } from "../../stores.js";
-  import { avatarUrl, updateGroupParticipants, setGroupSubject, groupInviteLink, setGroupPhoto, setDisappearing } from "../../services/data.js";
+  import { avatarUrl, updateGroupParticipants, setGroupSubject, groupInviteLink, setGroupPhoto, setDisappearing, exportChat } from "../../services/data.js";
   import { initial } from "../util.js";
   import { t } from "../i18n.js";
 
@@ -46,6 +46,15 @@
   async function copyInvite() {
     const link = await groupInviteLink(chat.id, false);
     if (link) { navigator.clipboard?.writeText(link); pushToast($t("invite_copied"), "ok"); }
+  }
+  async function doExport() {
+    const txt = await exportChat(chat.id);
+    if (!txt) { pushToast($t("export_empty")); return; }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt], { type: "text/plain" }));
+    a.download = `${(chat.name || "chat").replace(/[^\w-]+/g, "_")}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   let photoInput;
   function pickPhoto() { photoInput && photoInput.click(); }
@@ -153,6 +162,10 @@
     </div>
 
     <div class="info-group">
+      <button class="info-row" on:click={doExport}>
+        <svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        <span class="grow">{$t("export_chat")}</span>
+      </button>
       {#if chat.group}
         <button class="info-row danger" on:click={doLeave}>
           <svg viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></svg>

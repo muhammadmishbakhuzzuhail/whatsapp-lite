@@ -164,6 +164,44 @@ func (a *App) chatDTO(c storage.Chat) ChatDTO {
 	}
 }
 
+// ExportChat membuat transkrip teks polos seluruh riwayat chat (utk diunduh).
+func (a *App) ExportChat(jid string) string {
+	if a.store == nil {
+		return ""
+	}
+	ms, err := a.store.ListMessages(a.ctx, jid, 100000)
+	if err != nil {
+		return ""
+	}
+	var b strings.Builder
+	for _, m := range ms {
+		name := "Saya"
+		if !m.FromMe {
+			name = ""
+			if a.eng != nil {
+				name = a.eng.ChatName(m.Sender)
+			}
+			if name == "" {
+				name = m.PushName
+			}
+			if name == "" {
+				name = shortJID(m.Sender)
+			}
+		}
+		text := m.Text
+		if text == "" {
+			text = "<" + nonEmpty(m.Kind, "media") + ">"
+		}
+		b.WriteString(m.Timestamp.Format("2006-01-02 15:04"))
+		b.WriteString(" - ")
+		b.WriteString(name)
+		b.WriteString(": ")
+		b.WriteString(text)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
 type MessageDTO struct {
 	ID       string `json:"id"`
 	Dir      string `json:"dir"`
