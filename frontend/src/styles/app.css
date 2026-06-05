@@ -290,7 +290,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .bubble.sticker-bubble .meta { position: absolute; right: 6px; bottom: 6px;
   background: rgba(0,0,0,.45); color: #fff; border-radius: 8px; padding: 1px 6px; }
 .bubble.imgcard { padding: 4px; }                 /* kartu putih + padding tipis */
-.bubble.imgcard .meta { padding: 2px 4px 0; }     /* waktu/centang di bawah */
+/* Waktu/centang di BARIS sendiri di bawah gambar (bukan float di samping). */
+.bubble.imgcard .meta { float: none; clear: both; display: flex; justify-content: flex-end;
+  margin: 3px 3px 0; padding: 0; }
 
 .media-box { position: relative; cursor: pointer; background: transparent; }
 .media-img { display: block; border-radius: 8px; background: transparent; }
@@ -930,11 +932,16 @@ button.info-row:hover { background: var(--hover); }
 .spoiler::selection { color: transparent; }
 .spoiler.on { background: rgba(127,127,127,.16); color: inherit; cursor: text; filter: none; }
 
-/* Sticker/GIF: nama+quote dlm pill putih TERPISAH; stiker transparan di luar. */
+/* Sticker/GIF: nama+quote dlm pill putih TERPISAH (rounded penuh), lalu GAP,
+   lalu stiker transparan di luar pill. */
 .bubble.sticker-bubble .head.sticker-head { display: inline-block; max-width: 300px;
-  background: var(--in-bg); border-radius: 10px; padding: 5px 9px; margin-bottom: 7px;
-  box-shadow: var(--shadow); }
+  background: var(--in-bg); border-radius: 12px; padding: 7px 10px; margin: 0 0 10px;
+  box-shadow: var(--shadow); overflow: hidden; }
 .msg.out .bubble.sticker-bubble .head.sticker-head { background: var(--out-bg); }
-.bubble.sticker-bubble .sticker-head .sender { display: block; margin: 0 0 3px;
+.bubble.sticker-bubble .sticker-head .sender { display: block; margin: 0 0 4px;
   background: none; padding: 0; box-shadow: none; }
-.bubble.sticker-bubble .sticker-head .quote { margin: 0; background: var(--quote-bg); }
+/* quote di dlm pill: garis tepi tipis saja, tanpa kotak bg berat → terbaca satu pill. */
+.bubble.sticker-bubble .sticker-head .quote { margin: 0; background: transparent;
+  border-left: 3px solid var(--quote-bar); border-radius: 0; padding: 1px 0 1px 8px; }
+/* stiker SELALU mulai di baris baru, lepas dari pill. */
+.bubble.sticker-bubble .media-box.sticker { display: block; clear: both; }
