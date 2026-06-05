@@ -217,7 +217,7 @@
     </div>
   {/if}
 
-  <div class="bubble {bubbleClass} {msg.type === 'deleted' ? 'deleted' : ''}">
+  <div class="bubble {bubbleClass} {msg.type === 'deleted' ? 'deleted' : ''}" class:hascap={(msg.type === 'image' || msg.type === 'video') && caption}>
     {#if msg.type !== "deleted" && !$selectMode}
       <div class="msg-actions">
         <button title="👍" on:click={() => react('👍')}>👍</button>

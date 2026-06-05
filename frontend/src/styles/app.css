@@ -276,8 +276,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 
 /* Media + kutipan/nama/caption → beri padding agar tak menempel tepi & ada
    jarak ke gambar. (Bubble media transparan padding:0 by default.) */
-.bubble.media .quote { margin: 4px 4px 6px; }
-.bubble.media .sender { margin: 2px 4px 6px; display: inline-block; }
+.bubble.media .quote { margin: 2px 2px 4px; }
+.bubble.media .sender { margin: 1px 3px 4px; display: inline-block; }
 .bubble.media .forwarded { margin: 2px 4px; }
 
 /* MEDIA: bubble transparan (tanpa kartu), box PERSEGI tetap, isi center +
@@ -289,10 +289,15 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .bubble.sticker-bubble::before { display: none; }
 .bubble.sticker-bubble .meta { position: absolute; right: 6px; bottom: 6px;
   background: rgba(0,0,0,.45); color: #fff; border-radius: 8px; padding: 1px 6px; }
-.bubble.imgcard { padding: 4px; }                 /* kartu putih + padding tipis */
-/* Waktu/centang di BARIS sendiri di bawah gambar (bukan float di samping). */
+/* Foto/video: kartu putih TIPIS & SIMETRIS (padding atas=bawah=samping=4px).
+   Nama (grup) rapat di atas gambar; gambar mengisi lebar kartu; waktu di baris
+   bawah, rata kanan. Tanpa overflow:hidden agar menu hover tak terpotong. */
+.bubble.imgcard { padding: 4px; }
+.bubble.imgcard .head { margin: 0 0 4px; }
+.bubble.imgcard .media-box.card { display: block; max-width: none; min-width: 0; }
+.bubble.imgcard .media-box.card .media-img { border-radius: 7px; width: 100%; }
 .bubble.imgcard .meta { float: none; clear: both; display: flex; justify-content: flex-end;
-  margin: 3px 3px 0; padding: 0; }
+  margin: 4px 2px 0; padding: 0; }
 
 .media-box { position: relative; cursor: pointer; background: transparent; }
 .media-img { display: block; border-radius: 8px; background: transparent; }
@@ -760,7 +765,7 @@ button.info-row:hover { background: var(--hover); }
   background: var(--in-bg); color: var(--text); padding: 6px 9px; border-radius: 8px; box-shadow: var(--shadow); }
 .msg.out .bubble.sticker-bubble .text.caption { background: var(--out-bg); }
 /* Caption foto/video (kartu): teks polos DI BAWAH gambar, dalam bubble. */
-.bubble.imgcard .text.caption { display: block; margin: 5px 4px 1px; max-width: min(330px, 66vw); }
+.bubble.imgcard .text.caption { display: block; margin: 5px 3px 0; padding: 0; }
 
 /* Pada media transparan: hanya NAMA pengirim yang diberi pill (bukan kartu di belakang gambar).
    margin-bottom besar → ada GAP jelas antara pill nama & stiker/gambar. */
