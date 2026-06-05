@@ -289,15 +289,31 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .bubble.sticker-bubble::before { display: none; }
 .bubble.sticker-bubble .meta { position: absolute; right: 6px; bottom: 6px;
   background: rgba(0,0,0,.45); color: #fff; border-radius: 8px; padding: 1px 6px; }
-/* Foto/video: kartu putih TIPIS & SIMETRIS (padding atas=bawah=samping=4px).
-   Nama (grup) rapat di atas gambar; gambar mengisi lebar kartu; waktu di baris
-   bawah, rata kanan. Tanpa overflow:hidden agar menu hover tak terpotong. */
-.bubble.imgcard { padding: 4px; }
-.bubble.imgcard .head { margin: 0 0 4px; }
-.bubble.imgcard .media-box.card { display: block; max-width: none; min-width: 0; }
-.bubble.imgcard .media-box.card .media-img { border-radius: 7px; width: 100%; }
-.bubble.imgcard .meta { float: none; clear: both; display: flex; justify-content: flex-end;
-  margin: 4px 2px 0; padding: 0; }
+/* Foto/video EDGE-TO-EDGE (ala WhatsApp): gambar mengisi bubble tanpa bingkai
+   putih. Nama/quote (grup/balasan) = strip putih tipis di atas; waktu OVERLAY
+   pojok kanan-bawah gambar. Putih hanya muncul bila ada caption.
+   overflow:hidden HANYA di media-box (bukan bubble) → menu hover tak terpotong. */
+.bubble.imgcard { padding: 0; }
+/* Gambar murni (tanpa strip nama & tanpa caption) → bubble transparan, tanpa
+   kartu/shadow: benar2 edge-to-edge, sudut gambar membuka ke latar chat. */
+.bubble.imgcard.nohead:not(.hascap) { background: transparent; box-shadow: none; }
+.bubble.imgcard .head { padding: 6px 11px 6px; }
+.bubble.imgcard .media-box.card { display: block; max-width: none; min-width: 0; overflow: hidden;
+  border-bottom-left-radius: var(--r-lg); border-bottom-right-radius: var(--r-lg); }
+.bubble.imgcard .media-box.card .media-img { border-radius: 0; width: 100%; display: block; }
+/* sudut bawah gambar membulat (default; ada strip nama di atas) */
+/* tanpa strip nama/quote → sudut ATAS gambar ikut membulat */
+.bubble.imgcard.nohead .media-box.card { border-top-left-radius: var(--r-lg); border-top-right-radius: var(--r-lg); }
+/* ada caption → sudut bawah gambar lurus (caption nyambung di bawah) */
+.bubble.imgcard.hascap .media-box.card { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+/* waktu: overlay di atas gambar (tanpa caption) */
+.bubble.imgcard:not(.hascap) .meta { position: absolute; right: 9px; bottom: 8px; float: none; margin: 0;
+  padding: 1px 7px; background: rgba(0,0,0,.5); color: #fff; border-radius: 9px; }
+.bubble.imgcard:not(.hascap) .meta .ticks { stroke: #fff; }
+.bubble.imgcard:not(.hascap) .meta .ticks.read { stroke: #9ad; }
+/* dengan caption → waktu di baris bawah caption */
+.bubble.imgcard.hascap .meta { float: none; clear: both; display: flex; justify-content: flex-end;
+  margin: 3px 9px 4px; padding: 0; }
 
 .media-box { position: relative; cursor: pointer; background: transparent; }
 .media-img { display: block; border-radius: 8px; background: transparent; }
