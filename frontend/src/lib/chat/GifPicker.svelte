@@ -1,5 +1,5 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import { searchGifs, fetchRemoteMedia } from "../../services/data.js";
   import { t } from "../i18n.js";
 
@@ -9,15 +9,31 @@
   let q = "";
   let gifs = [];
   let loading = false;
+  let loadingMore = false;
+  let next = "";
   let busyId = null;
-  let _t;
+  let _t, _q = null, grid;
 
+  // Muat halaman pertama (reset) untuk query. Reaktif thd q (debounce).
   async function fetchGifs(query) {
-    loading = true;
-    gifs = await searchGifs(query);
+    loading = true; next = ""; _q = query;
+    const p = await searchGifs(query, "");
+    gifs = p.items; next = p.next || "";
     loading = false;
   }
-  onMount(() => fetchGifs(""));
+  // Halaman berikutnya (infinite scroll) — append, jaga kursor.
+  async function more() {
+    if (loadingMore || !next) return;
+    loadingMore = true;
+    const p = await searchGifs(_q ?? q.trim(), next);
+    const seen = new Set(gifs.map((g) => g.id));
+    gifs = [...gifs, ...p.items.filter((g) => !seen.has(g.id))];
+    next = p.next || "";
+    loadingMore = false;
+  }
+  function onScroll() {
+    if (grid && grid.scrollHeight - grid.scrollTop - grid.clientHeight < 240) more();
+  }
   $: { clearTimeout(_t); const query = q.trim(); _t = setTimeout(() => fetchGifs(query), 300); }
 
   async function pick(g) {
@@ -40,7 +56,7 @@
         on:click={() => (q = c === "trending" ? "" : c)}>{c}</button>
     {/each}
   </div>
-  <div class="gif-grid">
+  <div class="gif-grid" bind:this={grid} on:scroll={onScroll}>
     {#if loading}
       <div class="gif-empty">…</div>
     {:else}
@@ -51,6 +67,7 @@
         </button>
       {/each}
       {#if gifs.length === 0}<div class="gif-empty">{$t("no_match")}</div>{/if}
+      {#if loadingMore}<div class="gif-empty">…</div>{/if}
     {/if}
   </div>
   <div class="gif-credit">Powered by Tenor</div>

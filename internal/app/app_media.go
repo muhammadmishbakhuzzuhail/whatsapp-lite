@@ -107,7 +107,7 @@ func (a *App) serveMedia(w http.ResponseWriter, r *http.Request) {
 		if m, e := a.store.GetMessage(a.ctx, chat, id); e == nil && strings.HasPrefix(m.Thumb, "data:") {
 			if mime, raw, e2 := decodeDataURI(m.Thumb); e2 == nil && len(raw) > 0 {
 				path := base + extForMime(mime)
-				_ = os.WriteFile(path, raw, 0o644)
+				writeFileAtomic(path, raw)
 				w.Header().Set("Cache-Control", "max-age=31536000")
 				http.ServeFile(w, r, path)
 				return
@@ -122,9 +122,30 @@ func (a *App) serveMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	path := base + extForMime(mime)
-	_ = os.WriteFile(path, data, 0o644)
+	writeFileAtomic(path, data)
 	w.Header().Set("Cache-Control", "max-age=31536000")
 	http.ServeFile(w, r, path)
+}
+
+// writeFileAtomic menulis ke file sementara unik lalu rename → request paralel
+// utk media/avatar yang sama tak pernah menyajikan file separuh-tulis.
+func writeFileAtomic(path string, data []byte) {
+	f, err := os.CreateTemp(filepath.Dir(path), ".tmp-*")
+	if err != nil {
+		_ = os.WriteFile(path, data, 0o644)
+		return
+	}
+	tmp := f.Name()
+	if _, err := f.Write(data); err != nil {
+		f.Close()
+		_ = os.Remove(tmp)
+		return
+	}
+	f.Close()
+	_ = os.Chmod(tmp, 0o644)
+	if os.Rename(tmp, path) != nil {
+		_ = os.Remove(tmp)
+	}
 }
 
 func extForMime(mime string) string {
@@ -192,7 +213,7 @@ func (a *App) serveAvatar(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	_ = os.WriteFile(base+".jpg", b, 0o644)
+	writeFileAtomic(base+".jpg", b)
 	w.Header().Set("Cache-Control", "max-age=86400")
 	http.ServeFile(w, r, base+".jpg")
 }

@@ -230,16 +230,16 @@ export function SaveContactLabel(arg1, arg2) {
   return window['go']['app']['App']['SaveContactLabel'](arg1, arg2);
 }
 
-export function SearchGifs(arg1) {
-  return window['go']['app']['App']['SearchGifs'](arg1);
+export function SearchGifs(arg1, arg2) {
+  return window['go']['app']['App']['SearchGifs'](arg1, arg2);
 }
 
 export function SearchMessages(arg1) {
   return window['go']['app']['App']['SearchMessages'](arg1);
 }
 
-export function SearchStickers(arg1) {
-  return window['go']['app']['App']['SearchStickers'](arg1);
+export function SearchStickers(arg1, arg2) {
+  return window['go']['app']['App']['SearchStickers'](arg1, arg2);
 }
 
 export function SendContact(arg1, arg2, arg3) {

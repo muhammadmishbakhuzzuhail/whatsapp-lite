@@ -805,6 +805,11 @@ button.info-row:hover { background: var(--hover); }
 .nc-modal { position: fixed; z-index: 41; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 400px; max-width: 92vw; max-height: 76vh; display: flex; flex-direction: column;
   background: var(--sidebar-bg); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-lg); }
+/* Overlay dim + panel kartu (ContactsPane "simpan kontak", ChannelsPane "ikuti"). */
+.nc-overlay { position: fixed; inset: 0; z-index: 41; background: rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center; padding: 20px; }
+.nc-card { width: min(420px, 100%); max-height: 84vh; overflow-y: auto;
+  background: var(--sidebar-bg); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-lg); }
 .nc-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
   font-size: 17px; font-weight: 600; }
 .nc-action { display: flex; align-items: center; gap: 14px; width: 100%; border: 0; background: 0;

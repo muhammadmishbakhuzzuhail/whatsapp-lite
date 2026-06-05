@@ -1,5 +1,5 @@
 <script>
-  import { tick } from "svelte";
+  import { tick, onDestroy } from "svelte";
   import { get } from "svelte/store";
   import { sendMessage, sendMediaMessage, replyDraft, pushToast, editDraft, editMessage, chats, mediaDraft, theme } from "../../stores.js";
   import { getGroupInfo, sendLocation, sendPoll, sendContact, sendGif, sendSticker, fetchRemoteMedia } from "../../services/data.js";
@@ -271,6 +271,9 @@
   $: recLabel = `${String(Math.floor(recElapsed / 60)).padStart(2, "0")}:${String(recElapsed % 60).padStart(2, "0")}`;
   function stopRecTimer() { clearInterval(_recTimer); _recTimer = null; }
   function cancelRec() { if (!recording) return; recCancel = true; mediaRec && mediaRec.stop(); }
+  // Ganti chat / unmount saat merekam → batalkan: hentikan timer + recorder
+  // (onstop melepas track mic), supaya mic tak tetap hidup.
+  onDestroy(() => { if (recording) { recCancel = true; try { mediaRec && mediaRec.stop(); } catch (e) {} } stopRecTimer(); });
   async function handleMic() {
     if (value.trim()) { send(); return; }
     if (recording) { mediaRec && mediaRec.stop(); return; }    // tap lagi = stop & kirim

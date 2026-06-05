@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import Ticks from "../common/Ticks.svelte";
   import Avatar from "../common/Avatar.svelte";
   import { t } from "../i18n.js";
@@ -73,6 +73,8 @@
   function openMention(jid) {
     if (jid) openProfile(jid);
   }
+  // Hostname aman utk link-preview (URL rusak/kosong tak boleh throw saat render).
+  function hostOf(u) { try { return new URL(u).hostname; } catch (e) { return u || ""; } }
   $: source = msg.text || msg.caption || "";
   // "Baca selengkapnya": klem pesan panjang ke N baris (CSS line-clamp), tombol
   // toggle. everLong dijaga agar tombol "lebih sedikit" tetap muncul saat dibuka.
@@ -139,15 +141,19 @@
   let lpDone = null;
   $: if (LIVE && firstUrl && firstUrl !== lpDone) { lpDone = firstUrl; getLinkPreview(firstUrl).then((p) => (linkPrev = p)); }
 
+  let offPoll = null;
   onMount(() => {
     const p = new URLSearchParams(location.search);
     if (p.get("tr") === "1" && canTranslate && msg.dir === "in") doTranslate();
     if (p.get("menu") !== null && Number(p.get("menu")) === idx) menuOpen = true; // pratinjau
     if (msg.type === "poll") {
       loadPollVotes();
-      onEvent("wa:poll", (id) => { if (id === msg.id) loadPollVotes(); });
+      offPoll = onEvent("wa:poll", (id) => { if (id === msg.id) loadPollVotes(); });
     }
   });
+  // Bersihkan saat bubble dihancurkan (mis. ganti chat / prune): lepas listener
+  // poll (cegah tumpuk) + hentikan audio voice yg sedang main.
+  onDestroy(() => { offPoll && offPoll(); if (audioEl) { audioEl.pause(); audioEl = null; } });
 
   // --- context menu & aksi ---
   let menuOpen = false;
@@ -282,14 +288,15 @@
           <span class="lp-body">
             {#if linkPrev.title}<span class="lp-title">{linkPrev.title}</span>{/if}
             {#if linkPrev.desc}<span class="lp-desc">{linkPrev.desc}</span>{/if}
-            <span class="lp-host">{new URL(linkPrev.url).hostname}</span>
+            <span class="lp-host">{hostOf(linkPrev.url)}</span>
           </span>
         </a>
       {/if}
       <span class="text" class:clamp={!expanded} use:clampCheck>{#each textParts as p, i}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else if p.sp}<span class="spoiler {revealed[i] ? 'on' : ''}" role="button" tabindex="0" on:click|stopPropagation={() => (revealed[i] = true)} on:keydown={(e) => e.key === "Enter" && (revealed[i] = true)}>{p.t}</span>{:else if p.code}<code class="md-code">{p.t}</code>{:else if p.b}<strong>{p.t}</strong>{:else if p.i}<em>{p.t}</em>{:else if p.s}<s>{p.t}</s>{:else}{p.t}{/if}{/each}{#if msg.edited}<span class="edited-tag">{$t("edited_tag")}</span>{/if}<span class="t-spacer" class:out={msg.dir === 'out'} aria-hidden="true">{msg.time}</span></span>{#if everLong}<button class="read-more" on:click|stopPropagation={() => (expanded = !expanded)}>{expanded ? $t("read_less") : $t("read_more")}</button>{/if}
     {:else if isMedia}
       <div class="media-box {msg.type === 'sticker' ? 'sticker' : 'card'}"
-        role="button" tabindex="0" on:click={openMedia}>
+        role="button" tabindex="0" on:click={openMedia}
+        on:keydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openMedia())}>
         {#if msg.type === "gif"}
           <video class="media-img" src={mediaUrl} autoplay loop muted playsinline></video>
         {:else if msg.type === "video" && videoPlaying}

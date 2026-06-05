@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import { pushToast } from "../../stores.js";
   import { searchStickers, fetchRemoteMedia } from "../../services/data.js";
   import { t } from "../i18n.js";
@@ -14,10 +14,26 @@
   function saveRecents() { try { localStorage.setItem(REC_KEY, JSON.stringify(recents.slice(0, 24))); } catch (e) {} }
   function savePack() { try { localStorage.setItem(PACK_KEY, JSON.stringify(pack.slice(0, 100))); } catch (e) {} }
 
-  // --- Stiker online (Tenor, transparan) ---
-  let online = [], onlineQ = "", onlineLoading = false, onlineBusy = null, _ot;
-  async function fetchOnline(query) { onlineLoading = true; online = await searchStickers(query); onlineLoading = false; }
-  onMount(() => fetchOnline(""));
+  // --- Stiker online (Tenor, transparan) — paginated infinite scroll ---
+  let online = [], onlineQ = "", onlineLoading = false, onlineMore = false, onlineNext = "", onlineBusy = null, _ot, _oq = null, onlineGrid;
+  async function fetchOnline(query) {
+    onlineLoading = true; onlineNext = ""; _oq = query;
+    const p = await searchStickers(query, "");
+    online = p.items; onlineNext = p.next || "";
+    onlineLoading = false;
+  }
+  async function moreOnline() {
+    if (onlineMore || !onlineNext) return;
+    onlineMore = true;
+    const p = await searchStickers(_oq ?? onlineQ.trim(), onlineNext);
+    const seen = new Set(online.map((s) => s.id));
+    online = [...online, ...p.items.filter((s) => !seen.has(s.id))];
+    onlineNext = p.next || "";
+    onlineMore = false;
+  }
+  function onOnlineScroll() {
+    if (onlineGrid && onlineGrid.scrollHeight - onlineGrid.scrollTop - onlineGrid.clientHeight < 220) moreOnline();
+  }
   $: { clearTimeout(_ot); const query = onlineQ.trim(); _ot = setTimeout(() => fetchOnline(query), 300); }
   async function pickOnline(s) {
     if (onlineBusy) return;
@@ -114,7 +130,7 @@
 
   {#if tab === "online"}
     <input class="stk-search" placeholder="{$t('search')} stiker" bind:value={onlineQ} />
-    <div class="stk-grid">
+    <div class="stk-grid" bind:this={onlineGrid} on:scroll={onOnlineScroll}>
       {#if onlineLoading}
         <div class="stk-empty">…</div>
       {:else}
@@ -122,6 +138,7 @@
           <button class="stk-cell" on:click={() => pickOnline(s)} disabled={onlineBusy === s.id}><img src={s.preview} alt="" loading="lazy" /></button>
         {/each}
         {#if online.length === 0}<div class="stk-empty">{$t("no_match")}</div>{/if}
+        {#if onlineMore}<div class="stk-empty">…</div>{/if}
       {/if}
     </div>
     <div class="stk-credit">Powered by Tenor</div>

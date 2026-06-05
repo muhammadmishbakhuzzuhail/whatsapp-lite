@@ -27,22 +27,27 @@
 
   // --- Aksi admin grup ---
   function reloadSoon() { setTimeout(() => loadGroup(chat.id), 1200); }
+  // prompt() native tak jalan di WebKitGTK → modal input inline.
+  let pm = null; // {title, value, placeholder, ok(value)}
+  function submitPm() { if (!pm) return; const v = pm.value; const fn = pm.ok; pm = null; fn(v); }
   function editSubject() {
-    const name = prompt($t("group_edit_name"), chat.name);
-    if (name && name.trim() && name !== chat.name) { setGroupSubject(chat.id, name.trim()); reloadSoon(); }
+    pm = { title: $t("group_edit_name"), value: chat.name, placeholder: chat.name, ok: (name) => {
+      if (name && name.trim() && name !== chat.name) { setGroupSubject(chat.id, name.trim()); reloadSoon(); }
+    } };
   }
   function editDesc() {
-    const cur = groupInfo ? groupInfo.topic : "";
-    const d = prompt($t("group_edit_desc"), cur || "");
-    if (d !== null && d !== cur) { setGroupDescription(chat.id, d.trim()); reloadSoon(); }
+    const cur = groupInfo ? (groupInfo.topic || "") : "";
+    pm = { title: $t("group_edit_desc"), value: cur, placeholder: "", ok: (d) => {
+      if (d != null && d.trim() !== cur) { setGroupDescription(chat.id, d.trim()); reloadSoon(); }
+    } };
   }
   function addMember() {
-    const num = prompt($t("group_add_prompt"));
-    if (!num) return;
-    const digits = num.replace(/[^0-9]/g, "");
-    if (digits.length < 6) return;
-    updateGroupParticipants(chat.id, [digits + "@s.whatsapp.net"], "add");
-    reloadSoon();
+    pm = { title: $t("group_add_prompt"), value: "", placeholder: "62812…", ok: (num) => {
+      const digits = (num || "").replace(/[^0-9]/g, "");
+      if (digits.length < 6) return;
+      updateGroupParticipants(chat.id, [digits + "@s.whatsapp.net"], "add");
+      reloadSoon();
+    } };
   }
   function memberAction(p, action) {
     updateGroupParticipants(chat.id, [p.jid], action);
@@ -194,6 +199,21 @@
       {/if}
     </div>
   </aside>
+{/if}
+
+{#if pm}
+  <div class="nc-overlay" role="presentation" on:click|self={() => (pm = null)}>
+    <div class="nc-card" style="max-width:380px">
+      <h3 style="margin:0 0 14px">{pm.title}</h3>
+      <input class="poll-in" placeholder={pm.placeholder} bind:value={pm.value}
+        on:keydown={(e) => e.key === "Enter" && submitPm()} />
+      <!-- svelte-ignore a11y-autofocus -->
+      <div class="poll-foot">
+        <button class="btn-ghost" on:click={() => (pm = null)}>{$t("cancel")}</button>
+        <button class="btn-accent" on:click={submitPm}>{$t("save")}</button>
+      </div>
+    </div>
+  </div>
 {/if}
 
 <style>

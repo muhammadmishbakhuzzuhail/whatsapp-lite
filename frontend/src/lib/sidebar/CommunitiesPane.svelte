@@ -23,8 +23,12 @@
     openSet = openSet;
   }
   function openGroup(g) { activeChatId.set(g.jid); railView.set("chats"); }
-  function leave(c) {
-    if (!confirm($t("comm_leave_confirm").replace("%s", c.name))) return;
+  // confirm() native tak jalan di WebKitGTK → modal konfirmasi inline.
+  let leaveTarget = null;
+  function leave(c) { leaveTarget = c; }
+  function confirmLeave() {
+    const c = leaveTarget; leaveTarget = null;
+    if (!c) return;
     leaveCommunity(c.jid);
     comms = comms.filter((x) => x.jid !== c.jid);
     pushToast($t("comm_left"), "ok");
@@ -68,6 +72,19 @@
     {/if}
   {/if}
 </div>
+
+{#if leaveTarget}
+  <div class="nc-overlay" role="presentation" on:click|self={() => (leaveTarget = null)}>
+    <div class="nc-card" style="max-width:360px">
+      <h3 style="margin:0 0 10px">{$t("comm_leave")}</h3>
+      <p style="margin:0 0 16px;color:var(--text2);font-size:14px">{$t("comm_leave_confirm").replace("%s", leaveTarget.name)}</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn-ghost" on:click={() => (leaveTarget = null)}>{$t("cancel")}</button>
+        <button class="btn-accent" on:click={confirmLeave}>{$t("comm_leave")}</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   .comm { border-bottom:1px solid var(--line); }

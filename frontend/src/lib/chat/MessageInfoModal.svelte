@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { infoMsg } from "../../stores.js";
   import { getMessageInfo, onEvent } from "../../services/data.js";
   import { t } from "../i18n.js";
@@ -16,14 +16,16 @@
   function close() { infoMsg.set(null); }
 
   // Receipt baru saat modal terbuka → muat ulang diam-diam (live update daftar baca).
+  let offReceipt = null;
   onMount(() => {
-    onEvent("wa:receipt", (e) => {
+    offReceipt = onEvent("wa:receipt", (e) => {
       const ref = $infoMsg;
       if (!ref || !e || e.chat !== ref.chat) return;
       if (e.ids && e.ids.length && !e.ids.includes(ref.id)) return;
       getMessageInfo(ref.chat, ref.id).then((d) => { if ($infoMsg && d) info = d; });
     });
   });
+  onDestroy(() => offReceipt && offReceipt());
 
   const statusLabel = { sent: "status_sent", delivered: "status_delivered", read: "status_read" };
   const typeKey = { text: "t_text", image: "t_photo", video: "t_video", sticker: "t_sticker", voice: "t_voice" };

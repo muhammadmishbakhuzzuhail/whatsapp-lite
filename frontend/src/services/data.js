@@ -331,19 +331,21 @@ export async function getBlockedContacts() {
   return [];
 }
 // Pencarian GIF lewat backend (hindari CORS WebKitGTK). "" = trending.
-export async function searchGifs(query) {
-  if (LIVE) return (await A.SearchGifs(query || "")) || [];
+// pos = kursor halaman (infinite scroll). Kembalikan {items, next}.
+export async function searchGifs(query, pos = "") {
+  if (LIVE) return (await A.SearchGifs(query || "", pos || "")) || { items: [], next: "" };
   try {
     const KEY = "LIVDSRZULELA";
     const base = query ? `https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}` : `https://g.tenor.com/v1/trending`;
-    const r = await fetch(`${base}&key=${KEY}&limit=24&media_filter=minimal&contentfilter=high`).then((x) => x.json());
-    return (r.results || []).map((g) => { const m = (g.media && g.media[0]) || {}; return { id: g.id, preview: m.tinygif?.url, mp4: m.mp4?.url }; }).filter((g) => g.preview && g.mp4);
-  } catch (e) { return []; }
+    const r = await fetch(`${base}&key=${KEY}&limit=50&media_filter=minimal&contentfilter=high${pos ? `&pos=${encodeURIComponent(pos)}` : ""}`).then((x) => x.json());
+    const items = (r.results || []).map((g) => { const m = (g.media && g.media[0]) || {}; return { id: g.id, preview: m.tinygif?.url, mp4: m.mp4?.url }; }).filter((g) => g.preview && g.mp4);
+    return { items, next: r.next || "" };
+  } catch (e) { return { items: [], next: "" }; }
 }
 // Pencarian stiker transparan (Tenor) lewat backend — tab "Online" picker stiker.
-export async function searchStickers(query) {
-  if (LIVE) return (await A.SearchStickers(query || "")) || [];
-  return [];
+export async function searchStickers(query, pos = "") {
+  if (LIVE) return (await A.SearchStickers(query || "", pos || "")) || { items: [], next: "" };
+  return { items: [], next: "" };
 }
 // Daftar kontak (buku-alamat + label lokal) utk panel Kontak sidebar.
 export async function getContacts() {
@@ -415,9 +417,12 @@ export function notify(title, body) {
   if (LIVE) A.Notify(title, body);
 }
 
-// Langganan event dari engine (Wails runtime global).
+// Langganan event dari engine (Wails runtime global). Kembalikan fungsi
+// unsubscribe (panggil di onDestroy) agar listener tak menumpuk per-mount.
 export function onEvent(name, cb) {
   if (typeof window !== "undefined" && window.runtime?.EventsOn) {
-    window.runtime.EventsOn(name, cb);
+    const off = window.runtime.EventsOn(name, cb);
+    return typeof off === "function" ? off : () => window.runtime.EventsOff?.(name);
   }
+  return () => {};
 }

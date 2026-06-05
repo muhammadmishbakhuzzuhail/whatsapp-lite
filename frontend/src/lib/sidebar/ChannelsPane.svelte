@@ -164,7 +164,7 @@
 
 <!-- Ikuti via tautan -->
 {#if followOpen}
-  <div class="nc-modal" on:click|self={() => followOpen = false}>
+  <div class="nc-overlay" on:click|self={() => followOpen = false}>
     <div class="nc-card" style="max-width:420px">
       <h3 style="margin:0 0 12px">{$t("ch_follow")}</h3>
       <input bind:value={link} placeholder="https://whatsapp.com/channel/…"

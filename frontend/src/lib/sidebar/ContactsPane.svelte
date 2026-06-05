@@ -99,7 +99,7 @@
 </div>
 
 {#if newOpen}
-  <div class="nc-modal" role="presentation" on:click|self={() => (newOpen = false)}>
+  <div class="nc-overlay" role="presentation" on:click|self={() => (newOpen = false)}>
     <div class="nc-card" style="max-width:380px">
       <h3 style="margin:0 0 14px">{$t("contact_save_new")}</h3>
       <label class="poll-lbl">{$t("profile_phone")}</label>
