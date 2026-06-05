@@ -4,7 +4,7 @@
   import Avatar from "../common/Avatar.svelte";
   import { t } from "../i18n.js";
   import { translateMessage } from "../../services/translate.js";
-  import { LIVE, senderColorFor, avatarUrl } from "../../services/data.js";
+  import { LIVE, senderColorFor, avatarUrl, getLinkPreview } from "../../services/data.js";
   import { reactMessage, deleteMessage, starMessage, replyDraft, forwardDraft, activeChatId, chats, translateLang, editDraft, pushToast, pinMessageAction, showMessageInfo, lightbox, selectMode, selectedIdx, enterSelect, toggleSelect } from "../../stores.js";
 
   export let msg;
@@ -78,6 +78,12 @@
     translated = await translateMessage(source, $translateLang);
     busy = false;
   }
+  // Pratinjau tautan: ambil URL pertama di teks → fetch OG (sisi Go).
+  let linkPrev = null;
+  $: firstUrl = (msg.type === "text" && msg.text) ? (msg.text.match(/https?:\/\/[^\s]+/) || [])[0] : null;
+  let lpDone = null;
+  $: if (LIVE && firstUrl && firstUrl !== lpDone) { lpDone = firstUrl; getLinkPreview(firstUrl).then((p) => (linkPrev = p)); }
+
   onMount(() => {
     const p = new URLSearchParams(location.search);
     if (p.get("tr") === "1" && canTranslate && msg.dir === "in") doTranslate();
@@ -106,6 +112,15 @@
     if (translated) translated = null;
     else doTranslate();
     menuOpen = false;
+  }
+  // Lokasi: thumb = "lat,lng".
+  $: mapUrl = msg.type === "location" && msg.thumb
+    ? `https://staticmap.openstreetmap.de/staticmap.php?center=${msg.thumb}&zoom=15&size=300x150&markers=${msg.thumb},red-pushpin`
+    : "";
+  function openMap() {
+    if (!msg.thumb) return;
+    const [lat, lng] = msg.thumb.split(",");
+    window.open(`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`, "_blank");
   }
   function openMedia() {
     if (!mediaUrl || mediaErr) return;
@@ -155,6 +170,16 @@
     {/if}
 
     {#if msg.type === "text"}
+      {#if linkPrev}
+        <a class="link-prev" href={linkPrev.url} target="_blank" rel="noreferrer">
+          {#if linkPrev.image}<img class="lp-img" src={linkPrev.image} alt="" on:error={(e) => (e.target.style.display = 'none')} />{/if}
+          <span class="lp-body">
+            {#if linkPrev.title}<span class="lp-title">{linkPrev.title}</span>{/if}
+            {#if linkPrev.desc}<span class="lp-desc">{linkPrev.desc}</span>{/if}
+            <span class="lp-host">{new URL(linkPrev.url).hostname}</span>
+          </span>
+        </a>
+      {/if}
       <span class="text">{#each textParts as p}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else}{p.t}{/if}{/each}</span>
     {:else if isMedia}
       <div class="media-box {msg.type === 'sticker' ? 'sticker' : ''}"
@@ -182,6 +207,20 @@
       </button>
       <div class="wave">{#each Array(18) as _}<span></span>{/each}</div>
       <span class="vtime">{msg.duration || msg.text || ""}</span>
+    {:else if msg.type === "location"}
+      <button class="loc-card" on:click={openMap}>
+        <img class="loc-map" src={mapUrl} alt="" on:error={(e) => (e.target.style.display = 'none')} />
+        <span class="loc-lbl"><svg viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 0 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>{msg.text || "📍 Lokasi"}</span>
+      </button>
+    {:else if msg.type === "contact"}
+      <div class="ctc-card">
+        <span class="ctc-av">{(msg.text || "?").replace(/^👤\s*/, "")[0] || "?"}</span>
+        <span class="ctc-info">
+          <span class="ctc-name">{(msg.text || "").replace(/^👤\s*/, "")}</span>
+          {#if msg.thumb}<span class="ctc-num">{msg.thumb}</span>{/if}
+        </span>
+        {#if msg.thumb}<button class="ctc-btn" on:click={() => navigator.clipboard?.writeText(msg.thumb).then(() => pushToast($t("copied"), "ok"))}>{$t("copy")}</button>{/if}
+      </div>
     {/if}
 
     {#if translated}

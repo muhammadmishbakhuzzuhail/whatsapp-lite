@@ -74,6 +74,10 @@ export function GetGroupInfo(arg1) {
   return window['go']['app']['App']['GetGroupInfo'](arg1);
 }
 
+export function GetLinkPreview(arg1) {
+  return window['go']['app']['App']['GetLinkPreview'](arg1);
+}
+
 export function GetMessageInfo(arg1, arg2) {
   return window['go']['app']['App']['GetMessageInfo'](arg1, arg2);
 }

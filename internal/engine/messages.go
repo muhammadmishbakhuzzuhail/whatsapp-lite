@@ -6,6 +6,7 @@ package engine
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -250,13 +251,40 @@ func describeMessage(msg *waE2E.Message) (kind, text, thumb, media string) {
 		}
 		return "text", "📄 " + name, "", ""
 	case msg.GetLocationMessage() != nil:
-		return "text", "📍 Lokasi", "", ""
+		lm := msg.GetLocationMessage()
+		name := lm.GetName()
+		label := "📍 " + name
+		if name == "" {
+			label = "📍 Lokasi"
+		}
+		// thumb dipakai utk membawa "lat,lng" (dibaca FE utk peta/buka).
+		coord := fmt.Sprintf("%f,%f", lm.GetDegreesLatitude(), lm.GetDegreesLongitude())
+		return "location", label, coord, ""
 	case msg.GetContactMessage() != nil:
-		return "text", "👤 Kontak", "", ""
+		cm := msg.GetContactMessage()
+		name := cm.GetDisplayName()
+		if name == "" {
+			name = "Kontak"
+		}
+		// thumb membawa nomor telepon (di-parse dari vCard).
+		return "contact", "👤 " + name, vcardPhone(cm.GetVcard()), ""
 	case msg.GetPollCreationMessage() != nil:
 		return "text", "📊 Polling", "", ""
 	}
 	return "", "", "", "" // reaksi/protokol/key-dist/dll → junk
+}
+
+// vcardPhone memetik nomor telepon pertama dari teks vCard (baris TEL).
+func vcardPhone(vcard string) string {
+	for _, line := range strings.Split(vcard, "\n") {
+		up := strings.ToUpper(line)
+		if strings.HasPrefix(up, "TEL") {
+			if i := strings.LastIndex(line, ":"); i >= 0 {
+				return strings.TrimSpace(line[i+1:])
+			}
+		}
+	}
+	return ""
 }
 
 func fmtDur(sec uint32) string {

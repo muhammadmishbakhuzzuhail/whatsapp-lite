@@ -39,6 +39,8 @@ export function GetContactAbout(arg1:string):Promise<string>;
 
 export function GetGroupInfo(arg1:string):Promise<app.GroupInfoDTO>;
 
+export function GetLinkPreview(arg1:string):Promise<app.LinkPreviewDTO>;
+
 export function GetMessageInfo(arg1:string,arg2:string):Promise<app.MsgInfoDTO>;
 
 export function GetMessages(arg1:string):Promise<Array<app.MessageDTO>>;

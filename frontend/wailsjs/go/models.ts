@@ -204,6 +204,24 @@ export namespace app {
 		}
 	}
 	
+	export class LinkPreviewDTO {
+	    url: string;
+	    title: string;
+	    desc: string;
+	    image: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new LinkPreviewDTO(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.url = source["url"];
+	        this.title = source["title"];
+	        this.desc = source["desc"];
+	        this.image = source["image"];
+	    }
+	}
 	export class MentionDTO {
 	    num: string;
 	    name: string;

@@ -329,6 +329,17 @@ export function setGroupPhoto(jid, dataURI) {
   if (LIVE) A.SetGroupPhoto(jid, dataURI);
 }
 
+// Pratinjau tautan (OG meta, diambil sisi Go → tanpa CORS). Cache per-URL.
+const _lpCache = {};
+export async function getLinkPreview(url) {
+  if (!LIVE || !url) return null;
+  if (url in _lpCache) return _lpCache[url];
+  let p = null;
+  try { p = await A.GetLinkPreview(url); } catch (e) {}
+  _lpCache[url] = p;
+  return p;
+}
+
 // Notifikasi desktop native (Linux). No-op di browser/preview.
 export function notify(title, body) {
   if (LIVE) A.Notify(title, body);
