@@ -195,6 +195,14 @@
     if (mOpen && e.key === "Escape") { mOpen = false; return; }
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
   }
+  // Auto-grow textarea (multi-baris) sampai batas, lalu scroll.
+  function autoGrow(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 130) + "px";
+  }
+  // Reset tinggi setelah kirim/clear.
+  $: if (inputEl && value === "") inputEl.style.height = "auto";
   function addEmoji(e) { value += e; }
 
   // --- Rekam voice note (MediaRecorder) ---
@@ -372,8 +380,8 @@
     accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" />
 
   <div class="input">
-    <input type="text" placeholder={$t("composer_placeholder")} aria-label={$t("composer_placeholder")}
-      bind:this={inputEl} bind:value on:keydown={onKey} on:input={detectMention} on:click={detectMention} />
+    <textarea rows="1" placeholder={$t("composer_placeholder")} aria-label={$t("composer_placeholder")}
+      bind:this={inputEl} bind:value on:keydown={onKey} on:input={(e) => { detectMention(); autoGrow(e.target); }} on:click={detectMention}></textarea>
   </div>
   <button class="icon-btn mic {recording ? 'rec' : ''}" aria-label={typing ? $t("send") : $t("voice_msg")} on:click={handleMic}>
     {#if typing}

@@ -267,6 +267,7 @@ export namespace app {
 	    senderId: string;
 	    status: string;
 	    pinned: boolean;
+	    edited: boolean;
 	    ts: number;
 	    quoteId: string;
 	    quoteName: string;
@@ -290,6 +291,7 @@ export namespace app {
 	        this.senderId = source["senderId"];
 	        this.status = source["status"];
 	        this.pinned = source["pinned"];
+	        this.edited = source["edited"];
 	        this.ts = source["ts"];
 	        this.quoteId = source["quoteId"];
 	        this.quoteName = source["quoteName"];

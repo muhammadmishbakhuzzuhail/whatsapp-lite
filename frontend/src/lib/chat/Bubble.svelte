@@ -27,8 +27,25 @@
   $: senderCol = msg.senderColor || senderColorFor(msg.senderId || msg.sender || "");
   $: caption = msg.caption || (msg.type !== "sticker" ? msg.text : "") || "";
 
-  // Pecah teks → bagian biasa + bagian mention (@<nomor> → @Nama berwarna+klik).
+  // Pecah teks → mention (@<nomor>→@Nama) + format WhatsApp (*tebal* _miring_
+  // ~coret~ `mono` ```blok```).
   $: textParts = renderParts(msg.text, msg.mentions);
+  // Tokenisasi format pada satu potongan teks polos.
+  function fmt(s) {
+    const out = [];
+    const RE = /```([\s\S]+?)```|`([^`\n]+?)`|\*([^*\n]+?)\*|_([^_\n]+?)_|~([^~\n]+?)~/;
+    while (s) {
+      const m = s.match(RE);
+      if (!m) { out.push({ t: s }); break; }
+      if (m.index > 0) out.push({ t: s.slice(0, m.index) });
+      if (m[1] != null || m[2] != null) out.push({ t: m[1] ?? m[2], code: true });
+      else if (m[3] != null) out.push({ t: m[3], b: true });
+      else if (m[4] != null) out.push({ t: m[4], i: true });
+      else if (m[5] != null) out.push({ t: m[5], s: true });
+      s = s.slice(m.index + m[0].length);
+    }
+    return out;
+  }
   function renderParts(text, mentions) {
     if (!text) return [];
     const map = {};
@@ -37,13 +54,13 @@
     const out = [];
     let last = 0, mt;
     while ((mt = re.exec(text)) !== null) {
-      if (mt.index > last) out.push({ t: text.slice(last, mt.index) });
+      if (mt.index > last) out.push(...fmt(text.slice(last, mt.index)));
       const info = map[mt[1]];
       if (info) out.push({ m: true, name: info.name, jid: info.jid });
-      else out.push({ t: mt[0] });
+      else out.push(...fmt(mt[0]));
       last = re.lastIndex;
     }
-    if (last < text.length) out.push({ t: text.slice(last) });
+    if (last < text.length) out.push(...fmt(text.slice(last)));
     return out;
   }
   function openMention(jid) {
@@ -233,7 +250,7 @@
           </span>
         </a>
       {/if}
-      <span class="text">{#each textParts as p}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else}{p.t}{/if}{/each}</span>
+      <span class="text">{#each textParts as p}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else if p.code}<code class="md-code">{p.t}</code>{:else if p.b}<strong>{p.t}</strong>{:else if p.i}<em>{p.t}</em>{:else if p.s}<s>{p.t}</s>{:else}{p.t}{/if}{/each}{#if msg.edited}<span class="edited-tag">{$t("edited_tag")}</span>{/if}</span>
     {:else if isMedia}
       <div class="media-box {msg.type === 'sticker' ? 'sticker' : 'card'}"
         role="button" tabindex="0" on:click={openMedia}>

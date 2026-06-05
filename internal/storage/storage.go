@@ -51,6 +51,7 @@ type Message struct {
 
 	Status   string // sent | delivered | read (pesan sendiri)
 	Pinned   bool   // disematkan di chat
+	Edited   bool   // pernah disunting
 }
 
 // Store membungkus koneksi SQLite ke app.db.
@@ -122,6 +123,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_chat_ts ON messages(chat_jid, ts);
 	s.db.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN starred INTEGER NOT NULL DEFAULT 0`)
 	s.db.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN status TEXT NOT NULL DEFAULT 'sent'`)
 	s.db.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN pinned_in_chat INTEGER NOT NULL DEFAULT 0`)
+	s.db.ExecContext(ctx, `ALTER TABLE messages ADD COLUMN edited INTEGER NOT NULL DEFAULT 0`)
 	// Reaksi per (pesan, pengirim) — satu reaksi terakhir per orang.
 	s.db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS reactions (
 		chat_jid TEXT NOT NULL,
