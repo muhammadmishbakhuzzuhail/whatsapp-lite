@@ -4,6 +4,8 @@ import {app} from '../models';
 import {storage} from '../models';
 import {http} from '../models';
 
+export function AddViaQR(arg1:string):Promise<string>;
+
 export function Archive(arg1:string,arg2:boolean):Promise<void>;
 
 export function Block(arg1:string,arg2:boolean):Promise<void>;
@@ -79,6 +81,8 @@ export function GetPollVotes(arg1:string):Promise<app.PollVotesDTO>;
 export function GetPrivacy():Promise<Record<string, string>>;
 
 export function GetProfile():Promise<app.ProfileDTO>;
+
+export function GetProxy():Promise<string>;
 
 export function GetRecommendedChannels(arg1:string):Promise<Array<app.ChannelDTO>>;
 
@@ -197,6 +201,8 @@ export function SetMyName(arg1:string):Promise<void>;
 export function SetMyPhoto(arg1:string):Promise<void>;
 
 export function SetPrivacy(arg1:string,arg2:string):Promise<void>;
+
+export function SetProxy(arg1:string):Promise<void>;
 
 export function SetRetention(arg1:number):Promise<void>;
 

@@ -120,6 +120,15 @@ func (e *Engine) Start(ctx context.Context) (<-chan QREvent, error) {
 	return out, nil
 }
 
+// SetProxy menyetel proxy HTTP/SOCKS (mis. "socks5://127.0.0.1:9050"). Harus
+// dipanggil SEBELUM Connect. "" = tanpa proxy.
+func (e *Engine) SetProxy(addr string) error {
+	if addr == "" {
+		return nil
+	}
+	return e.Client.SetProxyAddress(addr)
+}
+
 // PairPhone meminta kode tautan 8-karakter (alternatif QR). Client harus sudah
 // Connect (alur QR sudah memanggilnya) & belum ter-pair. Kode diketik di HP:
 // Tautkan perangkat → Tautkan dengan nomor telepon. Sukses → event login biasa.

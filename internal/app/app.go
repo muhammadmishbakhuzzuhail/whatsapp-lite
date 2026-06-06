@@ -124,6 +124,11 @@ func (a *App) Startup(ctx context.Context) {
 
 	// Retensi pesan: default 90 hari. Prune + VACUUM sekali saat boot (off-loop)
 	// → app.db tetap ramping walau riwayat besar. Berbintang/disematkan aman.
+	// Proxy (opsional): terapkan SEBELUM Connect (dipicu FE setelah ini).
+	if px := store.GetMeta(ctx, "proxy", ""); px != "" {
+		_ = eng.SetProxy(px)
+	}
+
 	a.retentionDays = atoiDef(store.GetMeta(ctx, "retention_days", "90"), 90)
 	a.bg(func() {
 		if cut := a.retentionCutoff(); cut > 0 {

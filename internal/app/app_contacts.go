@@ -105,6 +105,19 @@ func (a *App) GetBusinessProfile(jid string) BizProfileDTO {
 	return BizProfileDTO{Address: bp.Address, Email: bp.Email, Category: bp.Category, IsBiz: true}
 }
 
+// AddViaQR menukar kode QR-kontak (hasil scan/tempel) → JID, lalu siap di-chat.
+func (a *App) AddViaQR(code string) string {
+	if a.eng == nil || code == "" {
+		return ""
+	}
+	jid, _, err := a.eng.ResolveQR(a.ctx, code)
+	if err != nil {
+		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
+		return ""
+	}
+	return jid
+}
+
 // GetLinkedDevices mengembalikan jumlah perangkat tertaut (HP + companion).
 func (a *App) GetLinkedDevices() int {
 	if a.eng == nil {

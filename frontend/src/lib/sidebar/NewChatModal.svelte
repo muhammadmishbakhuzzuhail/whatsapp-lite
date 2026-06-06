@@ -1,12 +1,20 @@
 <script>
   import Avatar from "../common/Avatar.svelte";
   import { chats, newChatOpen, activeChatId, railView, createGroup, pushToast } from "../../stores.js";
-  import { avatarUrl, joinGroupLink, isOnWhatsApp } from "../../services/data.js";
+  import { avatarUrl, joinGroupLink, isOnWhatsApp, addViaQR } from "../../services/data.js";
   import { t } from "../i18n.js";
 
   let mode = "list"; // "list" | "group" | "join" (gabung via tautan) | "number" (chat via nomor)
   let q = "", name = "", selected = new Set();
-  let linkVal = "", numVal = "", busy = false;
+  let linkVal = "", numVal = "", qrVal = "", busy = false;
+  async function doQR() {
+    if (!qrVal.trim()) return;
+    busy = true;
+    const jid = await addViaQR(qrVal.trim());
+    busy = false;
+    if (jid) { activeChatId.set(jid); railView.set("chats"); close(); }
+    else pushToast($t("qr_invalid"));
+  }
 
   async function doJoin() {
     if (!linkVal.trim()) return;
@@ -30,7 +38,7 @@
   $: contacts = $chats.filter((c) => !c.group); // kandidat: chat 1:1
   $: filtered = contacts.filter((c) => (c.name || "").toLowerCase().includes(q.toLowerCase()));
 
-  function close() { newChatOpen.set(false); mode = "list"; q = ""; name = ""; selected = new Set(); linkVal = ""; numVal = ""; }
+  function close() { newChatOpen.set(false); mode = "list"; q = ""; name = ""; selected = new Set(); linkVal = ""; numVal = ""; qrVal = ""; }
   function pick(c) {
     if (mode === "group") { toggle(c.id); return; }
     activeChatId.set(c.id); railView.set("chats"); close();
@@ -70,6 +78,10 @@
         <span class="nc-ico"><svg viewBox="0 0 24 24"><path d="M9 15l6-6M8 13l-2 2a3 3 0 0 0 4 4l2-2M16 11l2-2a3 3 0 0 0-4-4l-2 2"/></svg></span>
         {$t("join_via_link")}
       </button>
+      <button class="nc-action" on:click={() => (mode = "qr")}>
+        <span class="nc-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h6v6h-6z"/></svg></span>
+        {$t("add_via_qr")}
+      </button>
     {:else if mode === "group"}
       <input class="nc-name" placeholder={$t("group_name")} bind:value={name} />
     {/if}
@@ -82,6 +94,10 @@
       <input class="nc-name" type="tel" inputmode="tel" placeholder="62812…" bind:value={numVal}
         on:keydown={(e) => e.key === "Enter" && doNumber()} />
       <button class="nc-create" disabled={busy || numVal.replace(/[^0-9]/g, '').length < 8} on:click={doNumber}>{$t("start_chat")}</button>
+    {:else if mode === "qr"}
+      <input class="nc-name" placeholder="https://wa.me/qr/…" bind:value={qrVal}
+        on:keydown={(e) => e.key === "Enter" && doQR()} />
+      <button class="nc-create" disabled={busy || !qrVal.trim()} on:click={doQR}>{$t("start_chat")}</button>
     {:else}
     <input class="nc-search" placeholder={$t("search")} bind:value={q} />
 

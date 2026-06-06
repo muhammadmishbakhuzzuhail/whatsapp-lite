@@ -338,5 +338,9 @@
  "ch_created": "Channel created",
  "business_account": "Business account",
  "business_info": "Business info",
- "linked_devices": "Linked devices"
+ "linked_devices": "Linked devices",
+ "proxy": "Proxy",
+ "proxy_d": "Route the connection through an HTTP/SOCKS proxy. Applies after restart.",
+ "add_via_qr": "Add via QR code",
+ "qr_invalid": "Invalid or expired QR code"
 }

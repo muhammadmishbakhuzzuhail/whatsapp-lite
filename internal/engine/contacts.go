@@ -21,6 +21,15 @@ func (e *Engine) MyQRLink(ctx context.Context, revoke bool) (string, error) {
 	return e.Client.GetContactQRLink(ctx, revoke)
 }
 
+// ResolveQR menukar kode QR-kontak (hasil scan) → JID + nama.
+func (e *Engine) ResolveQR(ctx context.Context, code string) (string, string, error) {
+	t, err := e.Client.ResolveContactQRLink(ctx, code)
+	if err != nil || t == nil {
+		return "", "", err
+	}
+	return t.JID.String(), t.PushName, nil
+}
+
 // BizProfile = profil bisnis (alamat/email/kategori) bila kontak akun bisnis.
 type BizProfile struct {
 	Address  string

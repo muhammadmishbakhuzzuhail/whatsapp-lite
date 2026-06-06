@@ -104,6 +104,16 @@ func (a *App) GetChannelMessages(jid string) (out []ChannelMsgDTO) {
 		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
 		return
 	}
+	// Tandai sudah dilihat (view-receipt) — off-loop, best-effort.
+	sids := make([]int64, 0, len(ms))
+	for _, m := range ms {
+		if m.ServerID > 0 {
+			sids = append(sids, m.ServerID)
+		}
+	}
+	if len(sids) > 0 {
+		a.bg(func() { _ = a.eng.MarkChannelViewed(a.ctx, jid, sids) })
+	}
 	// terbaru dulu dari API → balik jadi lama→baru (ala feed chat).
 	for i := len(ms) - 1; i >= 0; i-- {
 		m := ms[i]

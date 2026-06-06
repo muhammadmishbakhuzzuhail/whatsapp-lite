@@ -43,6 +43,22 @@ func (a *App) MyQR(revoke bool) string {
 	return "data:image/png;base64," + base64.StdEncoding.EncodeToString(png)
 }
 
+// GetProxy mengembalikan alamat proxy tersimpan ("" = tanpa proxy).
+func (a *App) GetProxy() string {
+	if a.store == nil {
+		return ""
+	}
+	return a.store.GetMeta(a.ctx, "proxy", "")
+}
+
+// SetProxy menyimpan proxy (berlaku setelah restart). "" = matikan.
+func (a *App) SetProxy(addr string) {
+	if a.store != nil {
+		_ = a.store.SetMeta(a.ctx, "proxy", addr)
+	}
+	runtime.EventsEmit(a.ctx, "wa:sync", "")
+}
+
 // GetRetention mengembalikan jumlah hari retensi pesan (0 = selamanya).
 func (a *App) GetRetention() int { return a.retentionDays }
 

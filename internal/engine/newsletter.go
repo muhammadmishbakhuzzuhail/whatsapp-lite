@@ -37,6 +37,19 @@ type ChannelMsg struct {
 	Views     int
 }
 
+// MarkChannelViewed menandai pesan saluran sudah dilihat (view-receipt).
+func (e *Engine) MarkChannelViewed(ctx context.Context, jid string, serverIDs []int64) error {
+	j, err := types.ParseJID(jid)
+	if err != nil || len(serverIDs) == 0 {
+		return err
+	}
+	ids := make([]types.MessageServerID, 0, len(serverIDs))
+	for _, s := range serverIDs {
+		ids = append(ids, types.MessageServerID(int(s)))
+	}
+	return e.Client.NewsletterMarkViewed(ctx, j, ids)
+}
+
 // CreateChannel membuat saluran (newsletter) baru; kembalikan JID.
 func (e *Engine) CreateChannel(ctx context.Context, name, desc string, picture []byte) (string, error) {
 	md, err := e.Client.CreateNewsletter(ctx, whatsmeow.CreateNewsletterParams{

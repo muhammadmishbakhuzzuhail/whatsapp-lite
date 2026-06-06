@@ -395,6 +395,9 @@ export function setMyPhoto(dataURI) {
 export async function createChannel(name, desc) { if (LIVE) return await A.CreateChannel(name, desc || ""); return ""; }
 export async function getBusinessProfile(jid) { if (LIVE) return await A.GetBusinessProfile(jid); return { isBiz: false }; }
 export async function getLinkedDevices() { if (LIVE) return await A.GetLinkedDevices(); return 0; }
+export async function getProxy() { if (LIVE) return await A.GetProxy(); return ""; }
+export function setProxy(addr) { if (LIVE) A.SetProxy(addr); }
+export async function addViaQR(code) { if (LIVE) return await A.AddViaQR(code); return ""; }
 
 // --- Grup (Tier 5) ---
 export async function getGroupInfo(jid) {

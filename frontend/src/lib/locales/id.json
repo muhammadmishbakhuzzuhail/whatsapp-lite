@@ -338,5 +338,9 @@
  "ch_created": "Saluran dibuat",
  "business_account": "Akun bisnis",
  "business_info": "Info bisnis",
- "linked_devices": "Perangkat tertaut"
+ "linked_devices": "Perangkat tertaut",
+ "proxy": "Proxy",
+ "proxy_d": "Salurkan koneksi lewat proxy HTTP/SOCKS. Berlaku setelah restart.",
+ "add_via_qr": "Tambah via kode QR",
+ "qr_invalid": "Kode QR tidak valid atau kedaluwarsa"
 }

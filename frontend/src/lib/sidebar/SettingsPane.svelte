@@ -1,6 +1,6 @@
 <script>
   import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted } from "../../stores.js";
-  import { getProfile, getSettingsItems, getRetention, setRetention, setDefaultDisappearing } from "../../services/data.js";
+  import { getProfile, getSettingsItems, getRetention, setRetention, setDefaultDisappearing, getProxy, setProxy } from "../../services/data.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import LangPicker from "../common/LangPicker.svelte";
   import { initial } from "../util.js";
@@ -11,7 +11,9 @@
   const THEME_MODES = ["light", "dark", "system"];
   const RETENTIONS = [30, 90, 180, 0]; // 0 = selamanya
   let retDays = 90;
-  onMount(async () => { retDays = await getRetention(); });
+  let proxyVal = "", proxySaved = "";
+  onMount(async () => { retDays = await getRetention(); proxyVal = proxySaved = await getProxy(); });
+  function saveProxy() { if (proxyVal !== proxySaved) { setProxy(proxyVal.trim()); proxySaved = proxyVal.trim(); } }
   function pickRetention(d) { retDays = d; setRetention(d); }
   const DISAPPEAR = [[0, "disappearing_off"], [86400, "disappearing_24h"], [604800, "disappearing_7d"], [7776000, "disappearing_90d"]];
   let defDis = 0;
@@ -126,6 +128,16 @@
             <button class="theme-mode {defDis === s ? 'on' : ''}" on:click={() => pickDisappear(s)}>{$t(key)}</button>
           {/each}
         </div>
+      </div>
+    </div>
+
+    <!-- Proxy (privasi/jaringan; berlaku setelah restart) -->
+    <div class="settings-item" style="align-items:flex-start">
+      <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4a15 15 0 0 1 0 16M12 4a15 15 0 0 0 0 16"/><circle cx="12" cy="12" r="9"/></svg>
+      <div class="grow">
+        <div class="si-name">{$t("proxy")}</div>
+        <div class="si-desc">{$t("proxy_d")}</div>
+        <input class="stk-search" style="margin-top:6px" placeholder="socks5://127.0.0.1:9050" bind:value={proxyVal} on:blur={saveProxy} on:keydown={(e) => e.key === "Enter" && saveProxy()} />
       </div>
     </div>
 
