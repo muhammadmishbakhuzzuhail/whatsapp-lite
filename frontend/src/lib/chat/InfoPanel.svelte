@@ -8,6 +8,8 @@
   $: chat = $chats.find((c) => c.id === $activeChatId);
 
   let groupInfo = null, gLoaded = null;
+  let descOpen = false; // deskripsi grup/about: klem + "baca selengkapnya"
+  $: $activeChatId, (descOpen = false); // reset saat ganti chat
   $: if (chat && chat.group && chat.id !== gLoaded) loadGroup(chat.id);
   async function loadGroup(id) { gLoaded = id; groupInfo = null; groupInfo = await fetchGroupInfo(id); }
   $: amAdmin = !!(groupInfo && groupInfo.amAdmin);
@@ -113,7 +115,8 @@
     {#if chat.group && groupInfo}
       <div class="info-block">
         <div class="lbl">{$t("info_groupdesc")}{#if amAdmin}<button class="edit-pen" title={$t("group_edit_desc")} on:click={editDesc}><svg viewBox="0 0 24 24"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></button>{/if}</div>
-        <div class="val">{groupInfo.topic || "—"}</div>
+        <div class="val desc" class:clamp={!descOpen} dir="auto">{groupInfo.topic || "—"}</div>
+        {#if (groupInfo.topic || "").length > 140}<button class="read-more" on:click={() => (descOpen = !descOpen)}>{descOpen ? $t("read_less") : $t("read_more")}</button>{/if}
       </div>
     {/if}
     {#if chat.group && groupInfo && groupInfo.participants}
@@ -154,7 +157,8 @@
     {:else}
       <div class="info-block">
         <div class="lbl">{chat.group ? $t("info_groupdesc") : $t("info_about")}</div>
-        <div class="val">{chat.about || "—"}</div>
+        <div class="val desc" class:clamp={!descOpen} dir="auto">{chat.about || "—"}</div>
+        {#if (chat.about || "").length > 140}<button class="read-more" on:click={() => (descOpen = !descOpen)}>{descOpen ? $t("read_less") : $t("read_more")}</button>{/if}
       </div>
     {/if}
 

@@ -270,11 +270,17 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .msg.out.cont .bubble { border-top-right-radius: var(--r-lg); }
 
 .bubble .text { color: var(--text); white-space: pre-wrap; }
+/* Tautan dalam pesan: biru klik-able (buka di browser sistem). */
+.msg-link { color: #1c8adb; text-decoration: underline; word-break: break-all; cursor: pointer; }
+[data-theme="dark"] .msg-link { color: #53bdeb; }
 /* Pesan panjang: klem ke N baris (line-clamp WebKit) + tombol baca selengkapnya. */
 .bubble .text.clamp { display: -webkit-box; -webkit-line-clamp: 14; -webkit-box-orient: vertical; overflow: hidden; }
 .read-more { display: block; background: none; border: 0; color: var(--accent); font-weight: 600;
   cursor: pointer; padding: 3px 0 0; font-size: 13px; }
 .read-more:hover { text-decoration: underline; }
+/* Deskripsi grup/about di info-panel: klem 5 baris + tombol baca selengkapnya. */
+.info-panel .val.desc { white-space: pre-wrap; word-break: break-word; }
+.info-panel .val.desc.clamp { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 .bubble .text.caption { display: block; margin-top: 5px; }
 .sender { font-size: 13px; font-weight: 600; margin-bottom: 2px; display: block;
   max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
@@ -481,7 +487,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor;
 .conv-status.typing { color: var(--accent); }
 
 /* ====================== PANEL INFO (kanan) ====================== */
-.info-panel { width: 380px; background: var(--sidebar-bg); border-left: 1px solid var(--divider);
+.info-panel { width: 400px; background: var(--sidebar-bg); border-left: 1px solid var(--divider);
   display: flex; flex-direction: column; overflow-y: auto; }
 .info-head { height: 56px; padding: 0 16px; background: var(--head-bg);
   display: flex; align-items: center; gap: 20px; }
@@ -1027,7 +1033,7 @@ button.info-row:hover { background: var(--hover); }
 @media (max-width: 900px) {
   .sidebar { width: 40%; min-width: 280px; }
   .info-panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 30;
-    width: min(380px, 92vw); box-shadow: var(--shadow-lg); }
+    width: min(400px, 92vw); box-shadow: var(--shadow-lg); }
 }
 @media (max-width: 680px) {
   .rail { width: 54px; }

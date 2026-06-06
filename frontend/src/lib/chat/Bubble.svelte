@@ -37,19 +37,33 @@
   // Tokenisasi format pada satu potongan teks polos.
   function fmt(s) {
     const out = [];
-    const RE = /\|\|([\s\S]+?)\|\||```([\s\S]+?)```|`([^`\n]+?)`|\*([^*\n]+?)\*|_([^_\n]+?)_|~([^~\n]+?)~/;
+    // URL (group 1) dulu → tautan biru klik-able; lalu format WhatsApp.
+    const RE = /(https?:\/\/[^\s]+|www\.[^\s]+)|\|\|([\s\S]+?)\|\||```([\s\S]+?)```|`([^`\n]+?)`|\*([^*\n]+?)\*|_([^_\n]+?)_|~([^~\n]+?)~/;
     while (s) {
       const m = s.match(RE);
       if (!m) { out.push({ t: s }); break; }
       if (m.index > 0) out.push({ t: s.slice(0, m.index) });
-      if (m[1] != null) out.push({ t: m[1], sp: true });
-      else if (m[2] != null || m[3] != null) out.push({ t: m[2] ?? m[3], code: true });
-      else if (m[4] != null) out.push({ t: m[4], b: true });
-      else if (m[5] != null) out.push({ t: m[5], i: true });
-      else if (m[6] != null) out.push({ t: m[6], s: true });
+      if (m[1] != null) {
+        // buang tanda baca akhir yg ikut ke-match (mis. "url).")
+        let url = m[1], tail = "";
+        const tm = url.match(/[.,!?;:)\]]+$/);
+        if (tm) { tail = tm[0]; url = url.slice(0, -tail.length); }
+        out.push({ t: url, link: true });
+        if (tail) out.push({ t: tail });
+      } else if (m[2] != null) out.push({ t: m[2], sp: true });
+      else if (m[3] != null || m[4] != null) out.push({ t: m[3] ?? m[4], code: true });
+      else if (m[5] != null) out.push({ t: m[5], b: true });
+      else if (m[6] != null) out.push({ t: m[6], i: true });
+      else if (m[7] != null) out.push({ t: m[7], s: true });
       s = s.slice(m.index + m[0].length);
     }
     return out;
+  }
+  // Buka tautan di browser sistem (Wails) — bukan di dalam webview app.
+  function openURL(u) {
+    const href = u.startsWith("http") ? u : "https://" + u;
+    if (typeof window !== "undefined" && window.runtime && window.runtime.BrowserOpenURL) window.runtime.BrowserOpenURL(href);
+    else window.open(href, "_blank", "noreferrer");
   }
   let revealed = {};
   function renderParts(text, mentions) {
@@ -293,7 +307,7 @@
           </span>
         </a>
       {/if}
-      <span class="text" dir="auto" class:clamp={!expanded} use:clampCheck>{#each textParts as p, i}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else if p.sp}<span class="spoiler {revealed[i] ? 'on' : ''}" role="button" tabindex="0" on:click|stopPropagation={() => (revealed[i] = true)} on:keydown={(e) => e.key === "Enter" && (revealed[i] = true)}>{p.t}</span>{:else if p.code}<code class="md-code">{p.t}</code>{:else if p.b}<strong>{p.t}</strong>{:else if p.i}<em>{p.t}</em>{:else if p.s}<s>{p.t}</s>{:else}{p.t}{/if}{/each}{#if msg.edited}<span class="edited-tag">{$t("edited_tag")}</span>{/if}<span class="t-spacer" class:out={msg.dir === 'out'} aria-hidden="true">{msg.time}</span></span>{#if everLong}<button class="read-more" on:click|stopPropagation={() => (expanded = !expanded)}>{expanded ? $t("read_less") : $t("read_more")}</button>{/if}
+      <span class="text" dir="auto" class:clamp={!expanded} use:clampCheck>{#each textParts as p, i}{#if p.m}<span class="mention" role="button" tabindex="0" on:click|stopPropagation={() => openMention(p.jid)} on:keydown={(e) => e.key === "Enter" && openMention(p.jid)}>@{p.name}</span>{:else if p.sp}<span class="spoiler {revealed[i] ? 'on' : ''}" role="button" tabindex="0" on:click|stopPropagation={() => (revealed[i] = true)} on:keydown={(e) => e.key === "Enter" && (revealed[i] = true)}>{p.t}</span>{:else if p.code}<code class="md-code">{p.t}</code>{:else if p.b}<strong>{p.t}</strong>{:else if p.i}<em>{p.t}</em>{:else if p.s}<s>{p.t}</s>{:else if p.link}<a class="msg-link" href={p.t} on:click|stopPropagation|preventDefault={() => openURL(p.t)}>{p.t}</a>{:else}{p.t}{/if}{/each}{#if msg.edited}<span class="edited-tag">{$t("edited_tag")}</span>{/if}<span class="t-spacer" class:out={msg.dir === 'out'} aria-hidden="true">{msg.time}</span></span>{#if everLong}<button class="read-more" on:click|stopPropagation={() => (expanded = !expanded)}>{expanded ? $t("read_less") : $t("read_more")}</button>{/if}
     {:else if isMedia}
       <div class="media-box {msg.type === 'sticker' ? 'sticker' : 'card'}"
         role="button" tabindex="0" on:click={openMedia}
