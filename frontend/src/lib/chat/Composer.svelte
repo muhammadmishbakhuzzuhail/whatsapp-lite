@@ -62,15 +62,15 @@
   // rekaman mic → jalur handleMic). Cegah MP3 terkirim sbg voice memo.
   function kindOfFile(type) { return type.startsWith("video/") ? "video" : type.startsWith("image/") ? "image" : "document"; }
   function fileToDataURI(f) { return new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); }); }
-  // Gambar/video → modal pratinjau album + caption. Dokumen → kirim langsung.
+  // SEMUA jenis (gambar/video/audio/dokumen) → modal pratinjau dulu (preview +
+  // caption), bukan kirim langsung. Modal menampilkan player audio / pdf / ikon.
   async function previewFiles(fileList, viewOnce = false) {
     const items = [];
     for (const f of fileList) {
       if (tooBig(f)) continue;
       const kind = kindOfFile(f.type);
       const dataURI = await fileToDataURI(f);
-      if (kind === "image" || kind === "video") items.push({ kind, name: f.name, dataURI });
-      else await sendMediaMessage(chatId, kind, "", f.name, dataURI);
+      items.push({ kind, name: f.name, dataURI });
     }
     if (items.length) mediaDraft.set({ chatId, items, viewOnce });
   }

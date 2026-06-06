@@ -41,7 +41,10 @@
       {:else if cur.kind === "document"}
         <div class="mp-doc">
           <div class="mp-doc-name" title={cur.name}>{cur.name || "Dokumen"}</div>
-          {#if /\.(png|jpe?g|gif|webp|bmp)$/i.test(cur.name)}
+          {#if /\.(mp3|wav|ogg|m4a|aac|flac|opus)$/i.test(cur.name)}
+            <div class="mp-doc-ico"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+            <audio class="mp-doc-audio" src={cur.dataURI} controls></audio>
+          {:else if /\.(png|jpe?g|gif|webp|bmp)$/i.test(cur.name)}
             <img class="mp-doc-img" src={cur.dataURI} alt="" />
           {:else if /\.pdf$/i.test(cur.name)}
             <iframe class="mp-doc-frame" src={cur.dataURI} title={cur.name}></iframe>
@@ -58,6 +61,7 @@
         {#each items as it, i}
           <button class="mp-thumb {i === idx ? 'on' : ''}" on:click={() => (idx = i)}>
             {#if it.kind === "video"}<video src={it.dataURI} muted></video>
+            {:else if it.kind === "document" && /\.(mp3|wav|ogg|m4a|aac|flac|opus)$/i.test(it.name)}<span class="mp-thumb-doc">🎵</span>
             {:else if it.kind === "document" && !/\.(png|jpe?g|gif|webp|bmp)$/i.test(it.name)}<span class="mp-thumb-doc">📄</span>
             {:else}<img src={it.dataURI} alt="" />{/if}
             {#if (captions[i] || "").trim()}<span class="mp-thumb-cap" title={$t("add_caption")}>💬</span>{/if}
@@ -94,6 +98,7 @@
   .mp-doc-frame { width:min(90vw,680px); height:70vh; border:0; border-radius:8px; background:#fff; }
   .mp-doc-ico { width:120px; height:120px; color:#fff; opacity:.85; }
   .mp-doc-ico svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.5; }
+  .mp-doc-audio { width:min(90vw,420px); }
   .mp-thumb-doc { font-size:24px; }
   .mp-strip { display:flex; gap:8px; justify-content:center; padding:6px 16px; overflow-x:auto; }
   .mp-thumb { position:relative; width:54px; height:54px; border-radius:8px; overflow:hidden; border:2px solid transparent; padding:0; background:none; cursor:pointer; flex:0 0 auto; }
