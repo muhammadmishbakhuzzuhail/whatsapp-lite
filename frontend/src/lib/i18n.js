@@ -1,232 +1,60 @@
-// i18n ringan berbasis store. Tambah bahasa = tambah satu entri di `dict`.
+// i18n berbasis store. Bahasa UI = file statis di ./locales/<code>.json.
+// id/en/es ditulis tangan (kualitas); sisanya di-generate dari en.json
+// (lihat scripts/gen-locales.mjs) → ~70 bahasa. Locale non-base di-LAZY-load
+// saat dipilih; kunci yg hilang fallback ke en.
 // Pakai di komponen: import { t } from "../i18n.js"; lalu {$t('key')} atau {$t('key',{n:2})}.
-import { writable, derived } from "svelte/store";
+import { writable, derived, get } from "svelte/store";
+import en from "./locales/en.json";
+import id from "./locales/id.json";
+import es from "./locales/es.json";
+import { TRANSLATE_LANGS } from "./langs.js";
 
-export const languages = [
-  { code: "id", label: "Bahasa Indonesia" },
-  { code: "en", label: "English" },
-  { code: "es", label: "Español" },
-];
+// Base hand-authored — selalu termuat + sumber fallback.
+const base = { en, id, es };
+// Importer lazy utk SEMUA locale JSON (Vite glob; eager=false → di-load on demand).
+const loaders = import.meta.glob("./locales/*.json");
+const codeOf = (p) => p.slice(p.lastIndexOf("/") + 1, -5); // ./locales/zh-CN.json → zh-CN
+const available = new Set(Object.keys(loaders).map(codeOf));
 
-const dict = {
-  id: {
-    search_placeholder: "Cari atau mulai chat baru",
-    filter_all: "Semua", filter_unread: "Belum dibaca", filter_favorites: "Favorit", filter_groups: "Grup",
-    notif_off: "Notifikasi pesan nonaktif.", notif_turnon: "Aktifkan",
-    archived: "Diarsipkan", pinned: "Tersemat", all_chats: "Semua chat",
-    typing: "mengetik…", composer_placeholder: "Ketik pesan",
-    empty_conv: "Pilih chat untuk mulai mengobrol", no_match: "Tidak ada chat yang cocok.",
-    forwarded: "Diteruskan", unread_count: "{n} PESAN BELUM DIBACA", today: "Hari ini", yesterday: "Kemarin", scroll_bottom: "Ke pesan terbaru",
-    enc_notice: "Pesan dan panggilan terenkripsi secara end-to-end. Tidak ada pihak di luar chat ini, bahkan WhatsApp, yang dapat membacanya.",
-    info_contact: "Info kontak", info_group: "Info grup", info_about: "Info", info_groupdesc: "Deskripsi grup",
-    message_action: "Pesan", save_contact: "Simpan kontak", rename_contact: "Ubah nama", remove_label: "Hapus label",
-    save_contact_prompt: "Nama kontak:", contact_saved: "Disimpan sebagai %s", contact_label_removed: "Label dihapus",
-    contact_saved_chip: "✓ Tersimpan", contact_save_new: "Simpan kontak baru", contact_new_number: "Nomor telepon (mis. 62812…):", local_label_note: "Nama disimpan hanya di aplikasi ini, tidak ke buku alamat ponsel.",
-    info_media: "Media, tautan & dokumen", mute_notif: "Bisukan notifikasi", starred_msg: "Pesan favorit",
-    disappearing_msg: "Pesan sementara", off: "Nonaktif",
-    info_enc: "Enkripsi end-to-end", info_enc_sub: "Pesan & panggilan diamankan. Ketuk untuk verifikasi.",
-    block: "Blokir {name}", report: "Laporkan {name}",
-    settings: "Setelan", profile: "Profil", back: "Kembali", language: "Bahasa", coming_soon: "Segera hadir",
-    language_d: "Tampilan aplikasi (id/en/es)", translate_lang: "Bahasa terjemahan", translate_lang_d: "Bahasa tujuan terjemah pesan (73 bahasa)",
-    theme: "Tema", theme_light: "Terang", theme_dark: "Gelap", theme_system: "Sistem", chat_theme: "Tema chat", syncing: "Menyinkronkan…",
-    account: "Akun", account_d: "Notifikasi keamanan, info akun",
-    privacy: "Privasi", privacy_d: "Blokir kontak, pesan sementara",
-    chats_set: "Chat", chats_set_d: "Tema, wallpaper, riwayat chat",
-    notifications: "Notifikasi", notifications_d: "Pesan, grup, nada dering",
-    storage: "Penyimpanan & data", storage_d: "Penggunaan jaringan, unduh otomatis",
-    help: "Bantuan", help_d: "Pusat bantuan, hubungi kami, ketentuan",
-    profile_name: "Nama Anda", profile_name_note: "Nama ini akan terlihat oleh kontak WhatsApp Anda.",
-    profile_info: "Info", profile_phone: "Telepon",
-    rail_chats: "Chat", rail_calls: "Panggilan", rail_status: "Status", rail_channels: "Saluran",
-    my_status: "Status saya", status_add_hint: "Ketuk untuk menambah status", status_empty: "Belum ada pembaruan status",
-    status_new: "Status teks baru", status_placeholder: "Ketik status…", status_posted: "Status diunggah", status_failed: "Gagal mengunggah status", status_photo: "Status foto/video", status_seen_by: "dilihat", status_no_viewers: "Belum ada yang melihat",
-    ch_subs: "pengikut", ch_follow: "Ikuti saluran", ch_following: "Diikuti", ch_discover: "Jelajahi", ch_follow_short: "Ikuti", ch_discover_empty: "Tak ada rekomendasi (atau API tak tersedia)", ch_unfollow: "Berhenti ikuti", ch_followed: "Saluran diikuti", ch_follow_fail: "Gagal mengikuti saluran",
-    ch_unfollowed: "Berhenti mengikuti", ch_empty: "Belum mengikuti saluran apa pun", ch_no_posts: "Belum ada kiriman", mute: "Bisukan", unmute: "Bunyikan",
-    comm_groups: "grup", comm_leave: "Keluar komunitas", comm_leave_confirm: "Keluar dari komunitas \"%s\"?", comm_left: "Keluar dari komunitas",
-    comm_announce: "Pengumuman", comm_no_groups: "Belum ada grup", comm_empty: "Belum bergabung komunitas apa pun",
-    pin_msg: "Sematkan", unpin: "Lepas sematan", pinned: "Disematkan", msg_info: "Info pesan",
-    mark_read: "Tandai dibaca", mark_unread: "Tandai belum dibaca", file_too_big: "File terlalu besar (maks 64MB)",
-    group_create: "Buat grup", group_name: "Nama grup", group_new: "Grup baru", toggle_theme: "Ganti tema", new_message: "Pesan baru",
-    mi_status: "Status", status_sent: "Terkirim", status_delivered: "Tersampaikan", status_read: "Dibaca",
-    mi_type: "Tipe", mi_sent: "Dikirim", mi_from: "Dari", mi_note: "Belum ada tanda terima. Status diperbarui saat penerima menerima/membaca.", mi_unavailable: "Info tak tersedia",
-    mi_read_by: "Dibaca oleh", mi_delivered_to: "Tersampaikan ke",
-    copy: "Salin", edit: "Edit", reply_private: "Balas pribadi", reaction_remove: "Lepas reaksi", copied: "Disalin",
-    deleted_out: "Anda menghapus pesan ini", deleted_in: "Pesan ini dihapus",
-    t_text: "Teks", t_photo: "Foto", t_video: "Video", t_sticker: "Stiker", t_voice: "Pesan suara", media_generic: "media",
-    no_starred: "Belum ada pesan berbintang.", mention_all: "Semua", err_generic: "Terjadi kesalahan", members_n: "%n anggota",
-    mic_denied: "Mikrofon tak bisa diakses", edit_message: "Edit pesan", edited_tag: "(diedit)", archived_chats: "Chat diarsipkan", no_archived: "Tak ada chat diarsipkan", messages_label: "Pesan", notif_sound: "Suara notifikasi", show_deleted: "Lihat pesan dihapus", show_deleted_d: "Tampilkan isi pesan yang ditarik pengirim", save: "Simpan", wallpaper: "Wallpaper chat", wp_none: "Tanpa", export_chat: "Ekspor chat", export_empty: "Tak ada pesan utk diekspor",
-    group_edit_name: "Ubah nama grup", group_edit_desc: "Ubah deskripsi grup", group_add_member: "Tambah anggota", group_add_prompt: "Nomor telepon (mis. 62812…)", invite_link: "Tautan undangan", invite_copied: "Tautan undangan disalin",
-    group_set_photo: "Ubah foto grup", promote: "Jadikan admin", demote: "Turunkan admin", remove_member: "Keluarkan", leave_group: "Keluar grup", member_admin: "admin",
-    blocked_toast: "%s diblokir", left_toast: "Keluar dari %s",
-    pv_everyone: "Semua orang", pv_contacts: "Kontak saya", pv_nobody: "Tidak ada", pv_last_seen: "Terakhir dilihat", pv_profile_photo: "Foto profil",
-    pv_status: "Status", pv_groups: "Grup", pv_read_receipts: "Tanda baca", pv_blocked: "Kontak diblokir", pv_unblock: "Buka blokir", pv_no_blocked: "Tak ada kontak diblokir", unblocked_toast: "Blokir %s dibuka",
-    attach_media: "Foto & video", attach_location: "Lokasi", attach_poll: "Polling", attach_contact: "Kontak", attach_document: "Dokumen", attach_once: "Foto sekali lihat", view_once: "Sekali lihat", attach_sticker: "Stiker", stk_online: "Online", stk_recents: "Baru dipakai", stk_pack: "Paket", stk_create: "Buat", stk_import: "Impor stiker (webp/png)", stk_pack_empty: "Paket kosong. Impor webp/png.", stk_remove_hint: "Klik-kanan untuk hapus", stk_pick: "Pilih gambar", stk_hint: "Background dihapus otomatis", stk_processing: "Memproses… (hapus background)", stk_no_recents: "Belum ada stiker", sticker_bg_failed: "Gagal hapus background; pakai gambar utuh", poll_new: "Buat polling", poll_question: "Pertanyaan", poll_option: "Opsi", poll_add_option: "Tambah opsi", poll_multi: "Izinkan beberapa jawaban", poll_voted: "Suara terkirim", poll_votes_n: "suara",
-    add_caption: "Tambah keterangan…", fetching_media: "Mengambil media…", media_fetch_fail: "Gagal mengambil media", loc_unavailable: "Lokasi tak tersedia", loc_denied: "Akses lokasi ditolak", disappearing_off: "Mati", disappearing_24h: "24 jam", disappearing_7d: "7 hari", disappearing_90d: "90 hari", select_messages: "Pilih pesan", selected_n: "%n dipilih",
-    rail_communities: "Komunitas", rail_meta: "Meta AI", rail_contacts: "Kontak", rail_settings: "Setelan", rail_profile: "Profil",
-    new_chat: "Chat baru", menu: "Menu", search: "Cari", video_call: "Panggilan video", close: "Tutup",
-    translate: "Terjemahkan", translated: "Diterjemahkan", show_original: "Lihat asli", translating: "Menerjemahkan…",
-    login_title: "Tautkan perangkat", login_hint: "Buka WhatsApp Lite di ponsel untuk memindai.",
-    login_s1: "Buka WhatsApp di ponsel Anda", login_s2: "Ketuk Menu, lalu pilih Perangkat Tertaut",
-    login_s3: "Ketuk Tautkan perangkat dan arahkan kamera ke layar ini", login_waiting: "Menunggu kode QR…",
-    splash_title: "WhatsApp Lite untuk Desktop", splash_sub: "Kirim & terima pesan tanpa ponsel tetap online.",
-    splash_enc: "Terenkripsi end-to-end",
-    reply: "Balas", forward_action: "Teruskan", star: "Bintangi", delete: "Hapus", you: "Anda",
-    emoji: "Emoji", attach: "Lampirkan", voice_msg: "Pesan suara", recording: "Merekam… ketuk kirim untuk selesai", read_more: "Baca selengkapnya", read_less: "Lebih sedikit", voice_unsupported: "Rekam suara tak didukung di sini", send: "Kirim", cancel: "Batal",
-    logout: "Keluar", applock: "Kunci aplikasi", lock_now: "Kunci sekarang", lock_enter: "Masukkan PIN",
-    lock_set: "Buat PIN baru (4 digit)", lock_confirm_pin: "Ulangi PIN", lock_wrong: "PIN salah", active: "Aktif",
-  },
-  en: {
-    search_placeholder: "Search or start a new chat",
-    filter_all: "All", filter_unread: "Unread", filter_favorites: "Favorites", filter_groups: "Groups",
-    notif_off: "Message notifications are off.", notif_turnon: "Turn on",
-    archived: "Archived", pinned: "Pinned", all_chats: "All chats",
-    typing: "typing…", composer_placeholder: "Type a message",
-    empty_conv: "Select a chat to start messaging", no_match: "No chats found.",
-    forwarded: "Forwarded", unread_count: "{n} UNREAD MESSAGES", today: "Today", yesterday: "Yesterday", scroll_bottom: "Scroll to latest",
-    enc_notice: "Messages and calls are end-to-end encrypted. No one outside of this chat, not even WhatsApp, can read them.",
-    info_contact: "Contact info", info_group: "Group info", info_about: "About", info_groupdesc: "Group description",
-    message_action: "Message", save_contact: "Save contact", rename_contact: "Rename", remove_label: "Remove label",
-    save_contact_prompt: "Contact name:", contact_saved: "Saved as %s", contact_label_removed: "Label removed",
-    contact_saved_chip: "✓ Saved", contact_save_new: "Save new contact", contact_new_number: "Phone number (e.g. 62812…):", local_label_note: "Name is stored only in this app, not to your phone's address book.",
-    info_media: "Media, links & docs", mute_notif: "Mute notifications", starred_msg: "Starred messages",
-    disappearing_msg: "Disappearing messages", off: "Off",
-    info_enc: "Encryption", info_enc_sub: "Messages & calls are secured. Tap to verify.",
-    block: "Block {name}", report: "Report {name}",
-    settings: "Settings", profile: "Profile", back: "Back", language: "Language", coming_soon: "Coming soon",
-    language_d: "App display (id/en/es)", translate_lang: "Translation language", translate_lang_d: "Target language for message translation (73 langs)",
-    theme: "Theme", theme_light: "Light", theme_dark: "Dark", theme_system: "System", chat_theme: "Chat theme", syncing: "Syncing…",
-    account: "Account", account_d: "Security notifications, account info",
-    privacy: "Privacy", privacy_d: "Block contacts, disappearing messages",
-    chats_set: "Chats", chats_set_d: "Theme, wallpaper, chat history",
-    notifications: "Notifications", notifications_d: "Messages, groups, ringtone",
-    storage: "Storage & data", storage_d: "Network usage, auto-download",
-    help: "Help", help_d: "Help center, contact us, terms",
-    profile_name: "Your name", profile_name_note: "This name will be visible to your WhatsApp contacts.",
-    profile_info: "About", profile_phone: "Phone",
-    rail_chats: "Chats", rail_calls: "Calls", rail_status: "Status", rail_channels: "Channels",
-    my_status: "My status", status_add_hint: "Tap to add status update", status_empty: "No status updates yet",
-    status_new: "New text status", status_placeholder: "Type a status…", status_posted: "Status posted", status_failed: "Failed to post status", status_photo: "Photo/video status", status_seen_by: "seen", status_no_viewers: "No viewers yet",
-    ch_subs: "followers", ch_follow: "Follow channel", ch_following: "Following", ch_discover: "Discover", ch_follow_short: "Follow", ch_discover_empty: "No recommendations (or API unavailable)", ch_unfollow: "Unfollow", ch_followed: "Channel followed", ch_follow_fail: "Couldn't follow channel",
-    ch_unfollowed: "Unfollowed", ch_empty: "Not following any channels yet", ch_no_posts: "No posts yet", mute: "Mute", unmute: "Unmute",
-    comm_groups: "groups", comm_leave: "Leave community", comm_leave_confirm: "Leave the community \"%s\"?", comm_left: "Left community",
-    comm_announce: "Announcements", comm_no_groups: "No groups yet", comm_empty: "Not in any communities yet",
-    pin_msg: "Pin", unpin: "Unpin", pinned: "Pinned", msg_info: "Message info",
-    mark_read: "Mark as read", mark_unread: "Mark as unread", file_too_big: "File too large (max 64MB)",
-    group_create: "Create group", group_name: "Group name", group_new: "New group", toggle_theme: "Toggle theme", new_message: "New message",
-    mi_status: "Status", status_sent: "Sent", status_delivered: "Delivered", status_read: "Read",
-    mi_type: "Type", mi_sent: "Sent at", mi_from: "From", mi_note: "No receipts yet. Status updates as recipients receive/read it.", mi_unavailable: "Info unavailable",
-    mi_read_by: "Read by", mi_delivered_to: "Delivered to",
-    copy: "Copy", edit: "Edit", reply_private: "Reply privately", reaction_remove: "Remove reaction", copied: "Copied",
-    deleted_out: "You deleted this message", deleted_in: "This message was deleted",
-    t_text: "Text", t_photo: "Photo", t_video: "Video", t_sticker: "Sticker", t_voice: "Voice message", media_generic: "media",
-    no_starred: "No starred messages yet.", mention_all: "Everyone", err_generic: "Something went wrong", members_n: "%n members",
-    mic_denied: "Microphone unavailable", edit_message: "Edit message", edited_tag: "(edited)", archived_chats: "Archived chats", no_archived: "No archived chats", messages_label: "Messages", notif_sound: "Notification sound", show_deleted: "See deleted messages", show_deleted_d: "Show content of messages the sender revoked", save: "Save", wallpaper: "Chat wallpaper", wp_none: "None", export_chat: "Export chat", export_empty: "No messages to export",
-    group_edit_name: "Edit group name", group_edit_desc: "Edit group description", group_add_member: "Add member", group_add_prompt: "Phone number (e.g. 1555…)", invite_link: "Invite link", invite_copied: "Invite link copied",
-    group_set_photo: "Change group photo", promote: "Make admin", demote: "Dismiss as admin", remove_member: "Remove", leave_group: "Leave group", member_admin: "admin",
-    blocked_toast: "%s blocked", left_toast: "Left %s",
-    pv_everyone: "Everyone", pv_contacts: "My contacts", pv_nobody: "Nobody", pv_last_seen: "Last seen", pv_profile_photo: "Profile photo",
-    pv_status: "Status", pv_groups: "Groups", pv_read_receipts: "Read receipts", pv_blocked: "Blocked contacts", pv_unblock: "Unblock", pv_no_blocked: "No blocked contacts", unblocked_toast: "%s unblocked",
-    attach_media: "Photos & videos", attach_location: "Location", attach_poll: "Poll", attach_contact: "Contact", attach_document: "Document", attach_once: "View-once photo", view_once: "View once", attach_sticker: "Sticker", stk_online: "Online", stk_recents: "Recent", stk_pack: "Pack", stk_create: "Create", stk_import: "Import stickers (webp/png)", stk_pack_empty: "Pack empty. Import webp/png.", stk_remove_hint: "Right-click to remove", stk_pick: "Pick image", stk_hint: "Background removed automatically", stk_processing: "Processing… (removing background)", stk_no_recents: "No stickers yet", sticker_bg_failed: "Background removal failed; using full image", poll_new: "Create poll", poll_question: "Question", poll_option: "Option", poll_add_option: "Add option", poll_multi: "Allow multiple answers", poll_voted: "Vote sent", poll_votes_n: "votes",
-    add_caption: "Add a caption…", fetching_media: "Fetching media…", media_fetch_fail: "Couldn't fetch media", loc_unavailable: "Location unavailable", loc_denied: "Location access denied", disappearing_off: "Off", disappearing_24h: "24 hours", disappearing_7d: "7 days", disappearing_90d: "90 days", select_messages: "Select messages", selected_n: "%n selected",
-    rail_communities: "Communities", rail_meta: "Meta AI", rail_contacts: "Contacts", rail_settings: "Settings", rail_profile: "Profile",
-    new_chat: "New chat", menu: "Menu", search: "Search", video_call: "Video call", close: "Close",
-    translate: "Translate", translated: "Translated", show_original: "Show original", translating: "Translating…",
-    login_title: "Link a device", login_hint: "Open WhatsApp Lite on your phone to scan.",
-    login_s1: "Open WhatsApp on your phone", login_s2: "Tap Menu, then select Linked devices",
-    login_s3: "Tap Link a device and point your camera at this screen", login_waiting: "Waiting for QR code…",
-    splash_title: "WhatsApp Lite for Desktop", splash_sub: "Send & receive messages without keeping your phone online.",
-    splash_enc: "End-to-end encrypted",
-    reply: "Reply", forward_action: "Forward", star: "Star", delete: "Delete", you: "You",
-    emoji: "Emoji", attach: "Attach", voice_msg: "Voice message", recording: "Recording… tap send to finish", read_more: "Read more", read_less: "Read less", voice_unsupported: "Voice recording not supported here", send: "Send", cancel: "Cancel",
-    logout: "Log out", applock: "App lock", lock_now: "Lock now", lock_enter: "Enter PIN",
-    lock_set: "Create a new PIN (4 digits)", lock_confirm_pin: "Re-enter PIN", lock_wrong: "Wrong PIN", active: "On",
-  },
-  es: {
-    search_placeholder: "Busca o empieza un chat nuevo",
-    filter_all: "Todos", filter_unread: "No leídos", filter_favorites: "Favoritos", filter_groups: "Grupos",
-    notif_off: "Las notificaciones están desactivadas.", notif_turnon: "Activar",
-    archived: "Archivados", pinned: "Fijados", all_chats: "Todos los chats",
-    typing: "escribiendo…", composer_placeholder: "Escribe un mensaje",
-    empty_conv: "Selecciona un chat para empezar", no_match: "No se encontraron chats.",
-    forwarded: "Reenviado", unread_count: "{n} MENSAJES NO LEÍDOS", today: "Hoy", yesterday: "Ayer", scroll_bottom: "Ir al último",
-    enc_notice: "Los mensajes y llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos.",
-    info_contact: "Info. del contacto", info_group: "Info. del grupo", info_about: "Info.", info_groupdesc: "Descripción del grupo",
-    message_action: "Mensaje", save_contact: "Guardar contacto", rename_contact: "Renombrar", remove_label: "Quitar etiqueta",
-    save_contact_prompt: "Nombre del contacto:", contact_saved: "Guardado como %s", contact_label_removed: "Etiqueta eliminada",
-    contact_saved_chip: "✓ Guardado", contact_save_new: "Guardar contacto nuevo", contact_new_number: "Número de teléfono (ej. 62812…):", local_label_note: "El nombre se guarda solo en esta app, no en la agenda del teléfono.",
-    info_media: "Multimedia, enlaces y docs.", mute_notif: "Silenciar notificaciones", starred_msg: "Mensajes destacados",
-    disappearing_msg: "Mensajes temporales", off: "Desactivado",
-    info_enc: "Cifrado de extremo a extremo", info_enc_sub: "Mensajes y llamadas protegidos. Toca para verificar.",
-    block: "Bloquear a {name}", report: "Reportar a {name}",
-    settings: "Ajustes", profile: "Perfil", back: "Atrás", language: "Idioma", coming_soon: "Próximamente",
-    language_d: "Pantalla de la app (id/en/es)", translate_lang: "Idioma de traducción", translate_lang_d: "Idioma destino de traducción de mensajes (73)",
-    theme: "Tema", theme_light: "Claro", theme_dark: "Oscuro", theme_system: "Sistema", chat_theme: "Tema del chat", syncing: "Sincronizando…",
-    account: "Cuenta", account_d: "Notificaciones de seguridad, info. de cuenta",
-    privacy: "Privacidad", privacy_d: "Bloquear contactos, mensajes temporales",
-    chats_set: "Chats", chats_set_d: "Tema, fondo, historial de chats",
-    notifications: "Notificaciones", notifications_d: "Mensajes, grupos, tono",
-    storage: "Almacenamiento y datos", storage_d: "Uso de red, descarga automática",
-    help: "Ayuda", help_d: "Centro de ayuda, contáctanos, términos",
-    profile_name: "Tu nombre", profile_name_note: "Este nombre será visible para tus contactos de WhatsApp.",
-    profile_info: "Info.", profile_phone: "Teléfono",
-    rail_chats: "Chats", rail_calls: "Llamadas", rail_status: "Estados", rail_channels: "Canales",
-    my_status: "Mi estado", status_add_hint: "Toca para añadir estado", status_empty: "Aún no hay estados",
-    status_new: "Nuevo estado de texto", status_placeholder: "Escribe un estado…", status_posted: "Estado publicado", status_failed: "Error al publicar estado", status_photo: "Estado de foto/video", status_seen_by: "visto", status_no_viewers: "Aún nadie lo vio",
-    ch_subs: "seguidores", ch_follow: "Seguir canal", ch_following: "Siguiendo", ch_discover: "Explorar", ch_follow_short: "Seguir", ch_discover_empty: "Sin recomendaciones (o API no disponible)", ch_unfollow: "Dejar de seguir", ch_followed: "Canal seguido", ch_follow_fail: "No se pudo seguir el canal",
-    ch_unfollowed: "Dejaste de seguir", ch_empty: "Aún no sigues ningún canal", ch_no_posts: "Aún no hay publicaciones", mute: "Silenciar", unmute: "Activar",
-    comm_groups: "grupos", comm_leave: "Salir de la comunidad", comm_leave_confirm: "¿Salir de la comunidad \"%s\"?", comm_left: "Saliste de la comunidad",
-    comm_announce: "Anuncios", comm_no_groups: "Aún no hay grupos", comm_empty: "No estás en ninguna comunidad",
-    pin_msg: "Fijar", unpin: "Dejar de fijar", pinned: "Fijado", msg_info: "Info del mensaje",
-    mark_read: "Marcar como leído", mark_unread: "Marcar como no leído", file_too_big: "Archivo demasiado grande (máx 64MB)",
-    group_create: "Crear grupo", group_name: "Nombre del grupo", group_new: "Nuevo grupo", toggle_theme: "Cambiar tema", new_message: "Mensaje nuevo",
-    mi_status: "Estado", status_sent: "Enviado", status_delivered: "Entregado", status_read: "Leído",
-    mi_type: "Tipo", mi_sent: "Enviado", mi_from: "De", mi_note: "Aún no hay acuses. El estado se actualiza cuando los destinatarios lo reciben/leen.", mi_unavailable: "Info no disponible",
-    mi_read_by: "Leído por", mi_delivered_to: "Entregado a",
-    copy: "Copiar", edit: "Editar", reply_private: "Responder en privado", reaction_remove: "Quitar reacción", copied: "Copiado",
-    deleted_out: "Eliminaste este mensaje", deleted_in: "Se eliminó este mensaje",
-    t_text: "Texto", t_photo: "Foto", t_video: "Video", t_sticker: "Sticker", t_voice: "Mensaje de voz", media_generic: "multimedia",
-    no_starred: "Aún no hay mensajes destacados.", mention_all: "Todos", err_generic: "Algo salió mal", members_n: "%n miembros",
-    mic_denied: "Micrófono no disponible", edit_message: "Editar mensaje", edited_tag: "(editado)", archived_chats: "Chats archivados", no_archived: "No hay chats archivados", messages_label: "Mensajes", notif_sound: "Sonido de notificación", show_deleted: "Ver mensajes eliminados", show_deleted_d: "Mostrar el contenido de los mensajes revocados", save: "Guardar", wallpaper: "Fondo de chat", wp_none: "Ninguno", export_chat: "Exportar chat", export_empty: "No hay mensajes para exportar",
-    group_edit_name: "Editar nombre del grupo", group_edit_desc: "Editar descripción del grupo", group_add_member: "Añadir miembro", group_add_prompt: "Número de teléfono (ej. 52155…)", invite_link: "Enlace de invitación", invite_copied: "Enlace copiado",
-    group_set_photo: "Cambiar foto del grupo", promote: "Hacer admin", demote: "Quitar admin", remove_member: "Eliminar", leave_group: "Salir del grupo", member_admin: "admin",
-    blocked_toast: "%s bloqueado", left_toast: "Saliste de %s",
-    pv_everyone: "Todos", pv_contacts: "Mis contactos", pv_nobody: "Nadie", pv_last_seen: "Última vez", pv_profile_photo: "Foto de perfil",
-    pv_status: "Estado", pv_groups: "Grupos", pv_read_receipts: "Confirmaciones de lectura", pv_blocked: "Contactos bloqueados", pv_unblock: "Desbloquear", pv_no_blocked: "Sin contactos bloqueados", unblocked_toast: "%s desbloqueado",
-    attach_media: "Fotos y videos", attach_location: "Ubicación", attach_poll: "Encuesta", attach_contact: "Contacto", attach_document: "Documento", attach_once: "Foto de una vez", view_once: "Ver una vez", attach_sticker: "Sticker", stk_online: "Online", stk_recents: "Recientes", stk_pack: "Paquete", stk_create: "Crear", stk_import: "Importar stickers (webp/png)", stk_pack_empty: "Paquete vacío. Importa webp/png.", stk_remove_hint: "Clic derecho para quitar", stk_pick: "Elegir imagen", stk_hint: "Fondo eliminado automáticamente", stk_processing: "Procesando… (quitando fondo)", stk_no_recents: "Sin stickers aún", sticker_bg_failed: "Fallo al quitar fondo; usando imagen completa", poll_new: "Crear encuesta", poll_question: "Pregunta", poll_option: "Opción", poll_add_option: "Añadir opción", poll_multi: "Permitir varias respuestas", poll_voted: "Voto enviado", poll_votes_n: "votos",
-    add_caption: "Añadir descripción…", fetching_media: "Obteniendo media…", media_fetch_fail: "No se pudo obtener media", loc_unavailable: "Ubicación no disponible", loc_denied: "Acceso a ubicación denegado", disappearing_off: "Desactivado", disappearing_24h: "24 horas", disappearing_7d: "7 días", disappearing_90d: "90 días", select_messages: "Seleccionar mensajes", selected_n: "%n seleccionados",
-    rail_communities: "Comunidades", rail_meta: "Meta AI", rail_contacts: "Contactos", rail_settings: "Ajustes", rail_profile: "Perfil",
-    new_chat: "Chat nuevo", menu: "Menú", search: "Buscar", video_call: "Videollamada", close: "Cerrar",
-    translate: "Traducir", translated: "Traducido", show_original: "Ver original", translating: "Traduciendo…",
-    login_title: "Vincular dispositivo", login_hint: "Abre WhatsApp Lite en tu teléfono para escanear.",
-    login_s1: "Abre WhatsApp en tu teléfono", login_s2: "Toca Menú y selecciona Dispositivos vinculados",
-    login_s3: "Toca Vincular dispositivo y apunta la cámara a esta pantalla", login_waiting: "Esperando el código QR…",
-    splash_title: "WhatsApp Lite para Escritorio", splash_sub: "Envía y recibe mensajes sin mantener tu teléfono en línea.",
-    splash_enc: "Cifrado de extremo a extremo",
-    reply: "Responder", forward_action: "Reenviar", star: "Destacar", delete: "Eliminar", you: "Tú",
-    emoji: "Emoji", attach: "Adjuntar", voice_msg: "Mensaje de voz", recording: "Grabando… toca enviar para terminar", read_more: "Leer más", read_less: "Leer menos", voice_unsupported: "Grabación de voz no soportada aquí", send: "Enviar", cancel: "Cancelar",
-    logout: "Cerrar sesión", applock: "Bloqueo de app", lock_now: "Bloquear ahora", lock_enter: "Ingresa el PIN",
-    lock_set: "Crea un PIN (4 dígitos)", lock_confirm_pin: "Repite el PIN", lock_wrong: "PIN incorrecto", active: "Activado",
-  },
-};
+// Daftar bahasa UI = tiap locale yg punya file, label = nama native (dari langs).
+const labelOf = (c) => (TRANSLATE_LANGS.find((l) => l.code === c) || {}).name || c;
+export const languages = TRANSLATE_LANGS
+  .filter((l) => available.has(l.code) || base[l.code])
+  .map((l) => ({ code: l.code, label: l.name || labelOf(l.code) }));
+
+// Dict termuat (base + locale lazy yg sudah di-fetch).
+const loaded = writable({ ...base });
+
+async function ensure(code) {
+  if (base[code]) return;                 // sudah ada
+  if (get(loaded)[code]) return;          // sudah di-load
+  const imp = loaders["./locales/" + code + ".json"];
+  if (!imp) return;                       // tak ada file → biarkan fallback en
+  try {
+    const mod = await imp();
+    loaded.update((d) => ({ ...d, [code]: mod.default || mod }));
+  } catch (e) {}
+}
 
 const params = new URLSearchParams(location.search);
 function detect() {
   let stored = null;
   try { stored = localStorage.getItem("wa-lang"); } catch (e) {}
   const c = params.get("lang") || stored || "id";
-  return dict[c] ? c : "id";
+  return (base[c] || available.has(c)) ? c : "id";
 }
 
 export const locale = writable(detect());
 locale.subscribe((v) => {
   try { localStorage.setItem("wa-lang", v); } catch (e) {}
+  ensure(v); // muat locale aktif (kalau non-base)
 });
 
-// $t('key', {vars}) — fallback ke id lalu ke key mentah.
-export const t = derived(locale, ($l) => {
-  const table = dict[$l] || dict.id;
+// $t('key', {vars}) — tabel locale aktif → fallback en → key mentah.
+export const t = derived([locale, loaded], ([$l, $d]) => {
+  const table = $d[$l] || base.en;
   return (key, vars) => {
-    let s = table[key] ?? dict.id[key] ?? key;
+    let s = table[key] ?? base.en[key] ?? key;
     if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
     return s;
   };

@@ -4,7 +4,7 @@
   import { TRANSLATE_LANGS } from "../langs.js";
   import LangPicker from "../common/LangPicker.svelte";
   import { initial } from "../util.js";
-  import { t, locale, languages } from "../i18n.js";
+  import { t, locale } from "../i18n.js";
   const me = getProfile();
   const settingsItems = getSettingsItems();
   const THEME_MODES = ["light", "dark", "system"];
@@ -66,9 +66,7 @@
         <div class="si-name">{$t("language")}</div>
         <div class="si-desc">{$t("language_d")}</div>
       </div>
-      <select class="lang-select" bind:value={$locale}>
-        {#each languages as l}<option value={l.code}>{l.label}</option>{/each}
-      </select>
+      <LangPicker options={TRANSLATE_LANGS} value={$locale} onSelect={(c) => locale.set(c)} />
     </div>
 
     <!-- Bahasa tujuan terjemahan pesan (deteksi sumber otomatis) -->
