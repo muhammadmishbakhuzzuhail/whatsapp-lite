@@ -27,7 +27,9 @@ func transcodeToWebpSticker(ctx context.Context, data []byte) ([]byte, bool) {
 	cmd := exec.CommandContext(cctx, bin,
 		"-hide_banner", "-loglevel", "error", "-i", "pipe:0",
 		"-vf", "scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000",
-		"-c:v", "libwebp", "-pix_fmt", "yuva420p", "-q:v", "75", "-f", "webp", "pipe:1",
+		// -loop 0 = animasi berputar terus (default libwebp kadang loop sekali →
+		// stiker animasi berhenti). -an buang audio (mp4 stiker animasi).
+		"-an", "-loop", "0", "-c:v", "libwebp", "-pix_fmt", "yuva420p", "-q:v", "75", "-f", "webp", "pipe:1",
 	)
 	cmd.Stdin = bytes.NewReader(data)
 	var out, errBuf bytes.Buffer
