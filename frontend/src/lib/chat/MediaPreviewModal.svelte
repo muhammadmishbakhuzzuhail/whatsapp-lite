@@ -2,25 +2,26 @@
   import { mediaDraft, sendMediaMessage } from "../../stores.js";
   import { t } from "../i18n.js";
 
-  let caption = "";
+  let captions = []; // caption PER item (ala WhatsApp: tiap foto punya caption sendiri)
   let idx = 0;
   let last = null;
   let once = false; // sekali-lihat (view-once): toggle di preview, bukan attach menu
-  $: if ($mediaDraft && $mediaDraft !== last) { last = $mediaDraft; caption = ""; idx = 0; once = !!$mediaDraft.viewOnce; }
+  $: if ($mediaDraft && $mediaDraft !== last) { last = $mediaDraft; captions = ($mediaDraft.items || []).map(() => ""); idx = 0; once = !!$mediaDraft.viewOnce; }
   $: items = $mediaDraft?.items || [];
   $: cur = items[idx];
 
-  function close() { mediaDraft.set(null); caption = ""; idx = 0; once = false; }
+  function close() { mediaDraft.set(null); captions = []; idx = 0; once = false; }
   async function send() {
     const d = $mediaDraft;
     if (!d) return;
+    const caps = captions;
     mediaDraft.set(null);
-    // Caption ikut gambar yang sedang dilihat (sisanya tanpa caption) — ala WhatsApp.
+    // Tiap item dikirim dgn caption-nya sendiri.
     for (let i = 0; i < d.items.length; i++) {
       const it = d.items[i];
-      await sendMediaMessage(d.chatId, it.kind, i === idx ? caption.trim() : "", it.name || "", it.dataURI, once);
+      await sendMediaMessage(d.chatId, it.kind, (caps[i] || "").trim(), it.name || "", it.dataURI, once);
     }
-    caption = ""; once = false;
+    captions = []; once = false;
   }
   function onKey(e) {
     if (!$mediaDraft) return;
@@ -59,12 +60,13 @@
             {#if it.kind === "video"}<video src={it.dataURI} muted></video>
             {:else if it.kind === "document" && !/\.(png|jpe?g|gif|webp|bmp)$/i.test(it.name)}<span class="mp-thumb-doc">📄</span>
             {:else}<img src={it.dataURI} alt="" />{/if}
+            {#if (captions[i] || "").trim()}<span class="mp-thumb-cap" title={$t("add_caption")}>💬</span>{/if}
           </button>
         {/each}
       </div>
     {/if}
     <div class="mp-bar">
-      <input class="mp-caption" placeholder={$t("add_caption")} bind:value={caption} autofocus />
+      <input class="mp-caption" placeholder={$t("add_caption")} bind:value={captions[idx]} autofocus />
       <!-- Tombol sekali-lihat (SATU) di kanan area teks — hanya utk foto/video. -->
       {#if cur.kind !== "document"}
         <button class="mp-once {once ? 'on' : ''}" on:click={() => (once = !once)} title={$t("view_once")}>
@@ -94,9 +96,11 @@
   .mp-doc-ico svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.5; }
   .mp-thumb-doc { font-size:24px; }
   .mp-strip { display:flex; gap:8px; justify-content:center; padding:6px 16px; overflow-x:auto; }
-  .mp-thumb { width:54px; height:54px; border-radius:8px; overflow:hidden; border:2px solid transparent; padding:0; background:none; cursor:pointer; flex:0 0 auto; }
+  .mp-thumb { position:relative; width:54px; height:54px; border-radius:8px; overflow:hidden; border:2px solid transparent; padding:0; background:none; cursor:pointer; flex:0 0 auto; }
   .mp-thumb.on { border-color:var(--accent); }
   .mp-thumb img, .mp-thumb video { width:100%; height:100%; object-fit:cover; }
+  .mp-thumb-cap { position:absolute; bottom:1px; right:2px; font-size:10px; line-height:1;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
   .mp-bar { display:flex; align-items:center; gap:10px; padding:14px 18px 22px; max-width:760px; width:100%; margin:0 auto; }
   .mp-caption { flex:1; border:0; border-radius:22px; padding:12px 18px; background:var(--bg2,#1f2c34); color:var(--text,#e9edef); font:inherit; outline:none; }
   .mp-send { position:relative; width:48px; height:48px; border-radius:50%; border:0; background:var(--accent); color:#fff; cursor:pointer; display:grid; align-items:center;justify-items:center; flex:0 0 auto; }
