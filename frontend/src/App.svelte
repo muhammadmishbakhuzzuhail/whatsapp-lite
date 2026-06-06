@@ -17,7 +17,7 @@
   import PromptDialog from "./lib/common/PromptDialog.svelte";
   import FolderPicker from "./lib/sidebar/FolderPicker.svelte";
   import Toast from "./lib/Toast.svelte";
-  import { effectiveTheme, infoOpen, loggedIn, lockState, inChatSearch, activeChatId, newChatOpen, lightbox, forwardDraft, profileJid, chats, muteChat, markChatUnread, accent } from "./stores.js";
+  import { effectiveTheme, infoOpen, loggedIn, lockState, inChatSearch, activeChatId, newChatOpen, lightbox, forwardDraft, profileJid, chats, muteChat, markChatUnread, accent, uiScale } from "./stores.js";
   import { locale, t } from "./lib/i18n.js";
 
   $: document.documentElement.setAttribute("data-theme", $effectiveTheme);
@@ -25,6 +25,7 @@
   // Aksen kustom: set CSS var (kosong → hapus → pakai bawaan stylesheet).
   $: if ($accent) document.documentElement.style.setProperty("--accent", $accent);
   $: if (!$accent) document.documentElement.style.removeProperty("--accent");
+  $: if (typeof document !== "undefined") document.body.style.zoom = ($uiScale || 100) / 100;
 
   let shortcutsOpen = false;
   // Pindah chat relatif (+1 / -1) dalam urutan sidebar.

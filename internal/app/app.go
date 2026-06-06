@@ -157,6 +157,7 @@ func (a *App) Startup(ctx context.Context) {
 		}
 	}()
 
+	bgClose.Store(store.GetMeta(ctx, "bg_close", "0") == "1") // mode latar
 	a.startScheduler() // pesan terjadwal + pengingat (ticker sendiri)
 
 	// IPC single-instance: instance ke-2 yang gagal flock akan men-dial socket ini

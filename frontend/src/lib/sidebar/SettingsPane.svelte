@@ -1,6 +1,7 @@
 <script>
   import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted, accent } from "../../stores.js";
-  import { getProfile, getRetention, setRetention, setDefaultDisappearing, getProxy, setProxy } from "../../services/data.js";
+  import { getProfile, getRetention, setRetention, setDefaultDisappearing, getProxy, setProxy, getBackgroundClose, setBackgroundClose, quitApp } from "../../services/data.js";
+  import { uiScale } from "../../stores.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import LangPicker from "../common/LangPicker.svelte";
   import { initial } from "../util.js";
@@ -10,8 +11,9 @@
   const THEME_MODES = ["light", "dark", "system"];
   const RETENTIONS = [30, 90, 180, 0]; // 0 = selamanya
   let retDays = 90;
-  let proxyVal = "", proxySaved = "";
-  onMount(async () => { retDays = await getRetention(); proxyVal = proxySaved = await getProxy(); });
+  let proxyVal = "", proxySaved = "", bgClose = false;
+  onMount(async () => { retDays = await getRetention(); proxyVal = proxySaved = await getProxy(); bgClose = await getBackgroundClose(); });
+  function toggleBg() { bgClose = !bgClose; setBackgroundClose(bgClose); }
   function saveProxy() { if (proxyVal !== proxySaved) { setProxy(proxyVal.trim()); proxySaved = proxyVal.trim(); } }
   function pickRetention(d) { retDays = d; setRetention(d); }
   const DISAPPEAR = [[0, "disappearing_off"], [86400, "disappearing_24h"], [604800, "disappearing_7d"], [7776000, "disappearing_90d"]];
@@ -175,6 +177,28 @@
       <div class="settings-item" role="button" tabindex="0" on:click={lockNow} on:keydown={(e) => e.key === "Enter" && lockNow()}>
         {@html icons.applock}
         <div class="grow"><div class="si-name">{$t("lock_now")}</div></div>
+      </div>
+    {/if}
+
+    <!-- Ukuran tampilan (zoom UI) -->
+    <div class="settings-item" style="align-items:flex-start">
+      <svg viewBox="0 0 24 24"><path d="M7 8V5h3M17 8V5h-3M7 16v3h3M17 16v3h-3"/></svg>
+      <div class="grow">
+        <div class="si-name">{$t("ui_scale")} · {$uiScale}%</div>
+        <input type="range" min="80" max="140" step="5" bind:value={$uiScale} style="width:100%;margin-top:8px;accent-color:var(--accent)" />
+      </div>
+    </div>
+
+    <!-- Jalan di latar belakang saat ditutup -->
+    <div class="settings-item" role="button" tabindex="0" on:click={toggleBg} on:keydown={(e) => e.key === "Enter" && toggleBg()}>
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+      <div class="grow"><div class="si-name">{$t("bg_run")}</div><div class="si-desc">{$t("bg_run_d")}</div></div>
+      <span class="switch {bgClose ? '' : 'off'}"></span>
+    </div>
+    {#if bgClose}
+      <div class="settings-item danger" role="button" tabindex="0" on:click={quitApp} on:keydown={(e) => e.key === "Enter" && quitApp()}>
+        <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+        <div class="grow"><div class="si-name">{$t("quit_app")}</div></div>
       </div>
     {/if}
 

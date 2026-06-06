@@ -245,6 +245,15 @@
   function copyText() { if (source) navigator.clipboard?.writeText(source).then(() => pushToast($t("copied"), "ok")); menuOpen = false; }
   function editMsg() { editDraft.set({ chatId, id: msg.id, text: source }); menuOpen = false; }
   function replyPrivate() { activeChatId.set(msg.senderId); replyDraft.set({ name: msg.sender, text: source, id: msg.id, senderId: msg.senderId }); menuOpen = false; }
+  function readAloud() {
+    menuOpen = false;
+    try {
+      const synth = window.speechSynthesis;
+      if (!synth) { pushToast($t("err_generic")); return; }
+      synth.cancel();
+      synth.speak(new SpeechSynthesisUtterance(translated || source));
+    } catch (e) { pushToast($t("err_generic")); }
+  }
   function menuTranslate() {
     if (translated) clearTranslation(msg.id);
     else doTranslate();
@@ -490,6 +499,7 @@
         {#if source}<button class="mi" on:click={copyText}>{$t("copy")}</button>{/if}
         {#if msg.dir === "out" && msg.type === "text"}<button class="mi" on:click={editMsg}>{$t("edit")}</button>{/if}
         {#if canTranslate}<button class="mi" on:click={menuTranslate}>{translated ? $t("show_original") : $t("translate")}</button>{/if}
+        {#if source}<button class="mi" on:click={readAloud}>{$t("read_aloud")}</button>{/if}
         <button class="mi" on:click={forward}>{$t("forward_action")}</button>
         <button class="mi" on:click={star}>{msg.starred ? $t("star") + " ✓" : $t("star")}</button>
         <button class="mi" on:click={pin}>{msg.pinned ? $t("unpin") : $t("pin_msg")}</button>

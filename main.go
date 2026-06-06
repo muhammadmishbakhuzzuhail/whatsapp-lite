@@ -109,6 +109,7 @@ func main() {
 		OnStartup:        application.Startup,
 		OnDomReady:       application.DomReady,
 		OnShutdown:       application.Shutdown,
+		OnBeforeClose:    application.BeforeClose,
 		Bind:             []interface{}{application},
 		Linux: &linux.Options{
 			ProgramName: "WhatsApp Lite",

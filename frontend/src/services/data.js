@@ -405,6 +405,10 @@ export async function getReminders() { if (LIVE) return (await A.GetReminders())
 export function cancelReminder(id) { if (LIVE) A.CancelReminder(id); }
 export async function getProxy() { if (LIVE) return await A.GetProxy(); return ""; }
 export function setProxy(addr) { if (LIVE) A.SetProxy(addr); }
+export async function getBackgroundClose() { if (LIVE) return await A.GetBackgroundClose(); return false; }
+export function setBackgroundClose(on) { if (LIVE) A.SetBackgroundClose(on); }
+export function quitApp() { if (LIVE) A.Quit(); }
+export function setUnreadBadge(n) { if (LIVE) A.SetUnreadBadge(n); }
 export async function addViaQR(code) { if (LIVE) return await A.AddViaQR(code); return ""; }
 
 // --- Grup (Tier 5) ---

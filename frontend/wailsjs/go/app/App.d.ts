@@ -44,6 +44,8 @@ export function Forward(arg1:string,arg2:string,arg3:string):Promise<string>;
 
 export function GetArchivedChats():Promise<Array<app.ChatDTO>>;
 
+export function GetBackgroundClose():Promise<boolean>;
+
 export function GetBlockedContacts():Promise<Array<app.ContactRowDTO>>;
 
 export function GetBusinessProfile(arg1:string):Promise<app.BizProfileDTO>;
@@ -146,6 +148,8 @@ export function PostTextStatus(arg1:string,arg2:number,arg3:number):Promise<stri
 
 export function PreviewGroupLink(arg1:string):Promise<string>;
 
+export function Quit():Promise<void>;
+
 export function React(arg1:string,arg2:string,arg3:string,arg4:string,arg5:boolean):Promise<void>;
 
 export function ReactChannel(arg1:string,arg2:string,arg3:number,arg4:string):Promise<void>;
@@ -190,6 +194,8 @@ export function SendTyping(arg1:string,arg2:boolean):Promise<void>;
 
 export function ServeHTTP(arg1:http.ResponseWriter,arg2:http.Request):Promise<void>;
 
+export function SetBackgroundClose(arg1:boolean):Promise<void>;
+
 export function SetDefaultDisappearing(arg1:number):Promise<void>;
 
 export function SetDisappearing(arg1:string,arg2:number):Promise<void>;
@@ -219,6 +225,8 @@ export function SetPrivacy(arg1:string,arg2:string):Promise<void>;
 export function SetProxy(arg1:string):Promise<void>;
 
 export function SetRetention(arg1:number):Promise<void>;
+
+export function SetUnreadBadge(arg1:number):Promise<void>;
 
 export function StarMessage(arg1:string,arg2:string,arg3:string,arg4:boolean,arg5:boolean):Promise<void>;
 

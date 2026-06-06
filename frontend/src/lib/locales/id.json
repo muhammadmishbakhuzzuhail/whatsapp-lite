@@ -365,5 +365,10 @@
  "quick_replies_empty": "Belum ada template. Ketik pesan lalu Simpan.",
  "autotranslate_on": "Auto-terjemah aktif",
  "autotranslate_off": "Auto-terjemah mati",
- "accent_color": "Warna aksen"
+ "accent_color": "Warna aksen",
+ "ui_scale": "Ukuran tampilan",
+ "bg_run": "Jalan di latar belakang",
+ "bg_run_d": "Menutup window tetap menjalankan app (notifikasi, pesan terjadwal, pengingat).",
+ "quit_app": "Keluar aplikasi",
+ "read_aloud": "Bacakan"
 }

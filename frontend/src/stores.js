@@ -19,6 +19,11 @@ export const theme = writable(initialTheme);
 let _accentInit = "";
 try { _accentInit = localStorage.getItem("wa-accent") || ""; } catch (e) {}
 export const accent = writable(_accentInit);
+// Skala UI (zoom %, aksesibilitas). Default 100.
+let _scaleInit = 100;
+try { _scaleInit = +(localStorage.getItem("wa-scale") || 100) || 100; } catch (e) {}
+export const uiScale = writable(_scaleInit);
+uiScale.subscribe((v) => { try { localStorage.setItem("wa-scale", String(v)); } catch (e) {} });
 accent.subscribe((v) => { try { v ? localStorage.setItem("wa-accent", v) : localStorage.removeItem("wa-accent"); } catch (e) {} });
 theme.subscribe((v) => { try { localStorage.setItem("wa-theme", v); } catch (e) {} });
 
@@ -270,6 +275,8 @@ function nowTime() {
 async function refreshChats() {
   chats.set(await data.getChats());
 }
+// Badge unread di judul window (mode latar / taskbar).
+chats.subscribe((cs) => { try { data.setUnreadBadge((cs || []).reduce((n, c) => n + (c.unread ? 1 : 0), 0)); } catch (e) {} });
 // Debounce refresh sidebar (receipt grup = puluhan event → 1 query saja).
 let _chatRefreshTimer = null;
 function scheduleChatRefresh() {

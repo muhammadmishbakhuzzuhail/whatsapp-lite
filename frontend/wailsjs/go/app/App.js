@@ -82,6 +82,10 @@ export function GetArchivedChats() {
   return window['go']['app']['App']['GetArchivedChats']();
 }
 
+export function GetBackgroundClose() {
+  return window['go']['app']['App']['GetBackgroundClose']();
+}
+
 export function GetBlockedContacts() {
   return window['go']['app']['App']['GetBlockedContacts']();
 }
@@ -286,6 +290,10 @@ export function PreviewGroupLink(arg1) {
   return window['go']['app']['App']['PreviewGroupLink'](arg1);
 }
 
+export function Quit() {
+  return window['go']['app']['App']['Quit']();
+}
+
 export function React(arg1, arg2, arg3, arg4, arg5) {
   return window['go']['app']['App']['React'](arg1, arg2, arg3, arg4, arg5);
 }
@@ -374,6 +382,10 @@ export function ServeHTTP(arg1, arg2) {
   return window['go']['app']['App']['ServeHTTP'](arg1, arg2);
 }
 
+export function SetBackgroundClose(arg1) {
+  return window['go']['app']['App']['SetBackgroundClose'](arg1);
+}
+
 export function SetDefaultDisappearing(arg1) {
   return window['go']['app']['App']['SetDefaultDisappearing'](arg1);
 }
@@ -432,6 +444,10 @@ export function SetProxy(arg1) {
 
 export function SetRetention(arg1) {
   return window['go']['app']['App']['SetRetention'](arg1);
+}
+
+export function SetUnreadBadge(arg1) {
+  return window['go']['app']['App']['SetUnreadBadge'](arg1);
 }
 
 export function StarMessage(arg1, arg2, arg3, arg4, arg5) {
