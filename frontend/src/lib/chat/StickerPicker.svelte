@@ -152,6 +152,12 @@
         <button class="hist-clear" on:click={() => (sHist = clearHistory("sticker"))}>{$t("clear")}</button>
       </div>
     {/if}
+    <div class="gif-cats">
+      {#each ["trending","cute","love","happy","sad","angry","cat","dog","anime","meme","lol","thanks","hello","kiss","wow","good night"] as c}
+        <button class="gif-cat {(onlineQ.trim().toLowerCase() === c) || (c === 'trending' && !onlineQ.trim()) ? 'on' : ''}"
+          on:click={() => { sAcOpen = false; onlineQ = c === "trending" ? "" : c; }}>{c}</button>
+      {/each}
+    </div>
     <div class="stk-grid" bind:this={onlineGrid} on:scroll={onOnlineScroll}>
       {#if onlineLoading}
         <div class="stk-empty">…</div>
