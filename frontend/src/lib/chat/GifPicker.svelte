@@ -76,12 +76,15 @@
 <style>
   .gif-panel { position:absolute; bottom:68px; left:8px; right:8px; max-width:420px; z-index:40; background:var(--bg); border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.18); padding:10px; }
   .gif-search { width:100%; border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--bg2); color:var(--text); font:inherit; margin-bottom:8px; }
-  /* Masonry 2-kolom ala Discord: rasio natural, tak di-crop, tak bertumpuk. */
-  .gif-grid { columns:2; column-gap:6px; max-height:320px; overflow-y:auto; }
-  .gif-cell { position:relative; display:block; width:100%; margin:0 0 6px; padding:0; border:0;
-    background:var(--bg2); border-radius:8px; overflow:hidden; cursor:pointer; break-inside:avoid; }
-  .gif-cell img { width:100%; height:auto; display:block; }
+  /* Grid 2-kolom (Y-only). CSS `columns` lama bikin kolom meluber HORIZONTAL
+     saat tinggi dibatasi → X-scroll + scrollHeight kacau (infinite-scroll mati).
+     Grid → scroll vertikal saja + deteksi scroll andal → muat banyak GIF. */
+  .gif-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; align-content:start;
+    max-height:340px; overflow-y:auto; overflow-x:hidden; }
+  .gif-cell { position:relative; display:block; width:100%; margin:0; padding:0; border:0;
+    background:var(--bg2); border-radius:8px; overflow:hidden; cursor:pointer; }
+  .gif-cell img { width:100%; height:100%; object-fit:cover; display:block; aspect-ratio:1; }
   .gif-load { position:absolute; inset:0; display:grid; align-items:center;justify-items:center; background:rgba(0,0,0,.4); color:#fff; }
-  .gif-empty { text-align:center; color:var(--text2); padding:24px; }
+  .gif-empty { grid-column:1/-1; text-align:center; color:var(--text2); padding:24px; }
   .gif-credit { text-align:center; font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:.5px; }
 </style>

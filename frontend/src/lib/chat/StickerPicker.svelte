@@ -187,7 +187,7 @@
   .stk-tabs button.active { background:var(--accent); color:#fff; }
   .stk-search { width:100%; border:0; border-radius:9px; padding:8px 12px; background:var(--bg2); color:var(--text); font:inherit; outline:none; margin-bottom:8px; }
   .stk-credit { text-align:center; font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:.5px; }
-  .stk-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-height:280px; overflow-y:auto; }
+  .stk-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-height:280px; overflow-y:auto; overflow-x:hidden; }
   .stk-cell { padding:6px; border:0; background:var(--bg2); border-radius:10px; cursor:pointer; aspect-ratio:1; }
   .stk-cell img { width:100%; height:100%; object-fit:contain; }
   .stk-empty, .stk-busy { grid-column:1/-1; text-align:center; color:var(--text2); padding:28px 12px; }

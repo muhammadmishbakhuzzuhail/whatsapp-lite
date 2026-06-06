@@ -1026,7 +1026,8 @@ button.info-row:hover { background: var(--hover); }
   display: grid; align-items: center; justify-items: center; }
 
 /* Kategori GIF (chip) */
-.gif-cats { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 8px; }
+/* Kategori membungkus (wrap) — TANPA scroll-X (chip turun baris bila penuh). */
+.gif-cats { display: flex; flex-wrap: wrap; gap: 5px; padding-bottom: 8px; }
 .gif-cats .gif-cat { flex: 0 0 auto; border: 0; background: var(--bg2); color: var(--text2);
   border-radius: 12px; padding: 4px 10px; font-size: 12px; cursor: pointer; text-transform: capitalize; }
 .gif-cats .gif-cat.on { background: var(--accent); color: #fff; }
