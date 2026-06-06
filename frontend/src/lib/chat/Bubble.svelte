@@ -256,7 +256,8 @@
   }
   // Polling: thumb = JSON array opsi.
   $: pollOptions = msg.type === "poll" && msg.thumb ? (() => { try { return JSON.parse(msg.thumb); } catch (e) { return []; } })() : [];
-  let pollVoted = null;
+  // Pilihan suara sendiri persist (localStorage) → tak lupa saat reload.
+  let pollVoted = msg.type === "poll" ? (() => { try { return localStorage.getItem("wa-poll-" + msg.id); } catch (e) { return null; } })() : null;
   let pollCounts = {};
   let pollTotal = 0;
   async function loadPollVotes() {
@@ -268,6 +269,7 @@
   function vote(opt) {
     if (pollVoted) return;
     pollVoted = opt;
+    try { localStorage.setItem("wa-poll-" + msg.id, opt); } catch (e) {}
     votePoll(chatId, msg.senderId || "", msg.id, [opt]);
     setTimeout(loadPollVotes, 400);
   }

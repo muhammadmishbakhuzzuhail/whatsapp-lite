@@ -2,8 +2,23 @@
   import { lightbox, pushToast } from "../../stores.js";
   import { t } from "../i18n.js";
 
-  function close() { lightbox.set(null); }
+  // Zoom + geser (pan) untuk gambar.
+  let scale = 1, tx = 0, ty = 0, dragging = false, sx = 0, sy = 0;
+  function reset() { scale = 1; tx = 0; ty = 0; }
+  function close() { lightbox.set(null); reset(); }
+  let _lastUrl = null;
+  $: if ($lightbox && $lightbox.url !== _lastUrl) { _lastUrl = $lightbox.url; reset(); }
   function onKey(e) { if ($lightbox && e.key === "Escape") close(); }
+  function onWheel(e) {
+    if (!$lightbox || $lightbox.type === "video") return;
+    e.preventDefault();
+    scale = Math.min(5, Math.max(1, scale * (e.deltaY < 0 ? 1.15 : 0.87)));
+    if (scale === 1) { tx = 0; ty = 0; }
+  }
+  function dblZoom() { if (scale > 1) reset(); else scale = 2.5; }
+  function down(e) { if (scale > 1) { dragging = true; sx = e.clientX - tx; sy = e.clientY - ty; } }
+  function move(e) { if (dragging) { tx = e.clientX - sx; ty = e.clientY - sy; } }
+  function up() { dragging = false; }
   async function save() {
     const lb = $lightbox;
     if (!lb) return;
@@ -22,7 +37,7 @@
 <svelte:window on:keydown={onKey} />
 
 {#if $lightbox}
-  <div class="lb" on:click|self={close}>
+  <div class="lb" on:click|self={close} on:wheel={onWheel} on:mousemove={move} on:mouseup={up} on:mouseleave={up}>
     <button class="lb-save" title={$t("save")} on:click={save}>
       <svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
     </button>
@@ -30,7 +45,9 @@
     {#if $lightbox.type === "video"}
       <video class="lb-media" src={$lightbox.url} controls autoplay></video>
     {:else}
-      <img class="lb-media" src={$lightbox.url} alt="" />
+      <img class="lb-media" src={$lightbox.url} alt="" draggable="false"
+        style="transform:translate({tx}px,{ty}px) scale({scale}); cursor:{scale > 1 ? (dragging ? 'grabbing' : 'grab') : 'zoom-in'}"
+        on:dblclick={dblZoom} on:mousedown={down} />
     {/if}
     {#if $lightbox.caption}<div class="lb-cap">{$lightbox.caption}</div>{/if}
   </div>
