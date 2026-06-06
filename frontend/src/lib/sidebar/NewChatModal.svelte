@@ -1,6 +1,6 @@
 <script>
   import Avatar from "../common/Avatar.svelte";
-  import { chats, newChatOpen, activeChatId, railView, createGroup, pushToast } from "../../stores.js";
+  import { chats, newChatOpen, activeChatId, railView, createGroup, pushToast, sendMessage, askPrompt } from "../../stores.js";
   import { avatarUrl, joinGroupLink, isOnWhatsApp, addViaQR, fetchProfile } from "../../services/data.js";
   import { onMount } from "svelte";
   import { t } from "../i18n.js";
@@ -43,8 +43,17 @@
 
   function close() { newChatOpen.set(false); mode = "list"; q = ""; name = ""; selected = new Set(); linkVal = ""; numVal = ""; qrVal = ""; }
   function pick(c) {
-    if (mode === "group") { toggle(c.id); return; }
+    if (mode === "group" || mode === "broadcast") { toggle(c.id); return; }
     activeChatId.set(c.id); railView.set("chats"); close();
+  }
+  function doBroadcast() {
+    if (selected.size === 0) return;
+    const jids = [...selected];
+    askPrompt($t("broadcast_msg"), "", (text) => {
+      jids.forEach((j) => sendMessage(j, text));
+      pushToast($t("broadcast_sent").replace("%n", jids.length), "ok");
+      close();
+    });
   }
   function toggle(id) {
     selected.has(id) ? selected.delete(id) : selected.add(id);
@@ -91,6 +100,10 @@
         <span class="nc-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h6v6h-6z"/></svg></span>
         {$t("add_via_qr")}
       </button>
+      <button class="nc-action" on:click={() => (mode = "broadcast")}>
+        <span class="nc-ico"><svg viewBox="0 0 24 24"><path d="M3 11l16-7v16L3 13zM3 11v2M8 12.5V18l3 1"/></svg></span>
+        {$t("broadcast")}
+      </button>
     {:else if mode === "group"}
       <input class="nc-name" placeholder={$t("group_name")} bind:value={name} />
     {/if}
@@ -115,7 +128,7 @@
         <button class="nc-row" on:click={() => pick(c)}>
           <Avatar name={c.name} color={c.color} photo={avatarUrl(c.id) || c.photo} sm={true} />
           <span class="nc-cname">{c.name}</span>
-          {#if mode === "group"}
+          {#if mode === "group" || mode === "broadcast"}
             <span class="nc-check" class:on={selected.has(c.id)}></span>
           {/if}
         </button>
@@ -126,6 +139,10 @@
     {#if mode === "group"}
       <button class="nc-create" disabled={!name.trim() || selected.size === 0} on:click={makeGroup}>
         {$t("group_create")} ({selected.size})
+      </button>
+    {:else if mode === "broadcast"}
+      <button class="nc-create" disabled={selected.size === 0} on:click={doBroadcast}>
+        {$t("broadcast")} ({selected.size})
       </button>
     {/if}
     {/if}

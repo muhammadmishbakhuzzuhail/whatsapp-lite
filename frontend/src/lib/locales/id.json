@@ -357,5 +357,8 @@
  "folders": "Folder",
  "folder_new": "Folder baru",
  "no_folders": "Belum ada folder",
- "note_to_self": "Pesan ke diri sendiri"
+ "note_to_self": "Pesan ke diri sendiri",
+ "broadcast": "Siaran",
+ "broadcast_msg": "Pesan siaran:",
+ "broadcast_sent": "Terkirim ke %n chat"
 }

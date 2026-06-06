@@ -357,5 +357,8 @@
  "folders": "Carpetas",
  "folder_new": "Nueva carpeta",
  "no_folders": "Aún no hay carpetas",
- "note_to_self": "Mensaje a ti mismo"
+ "note_to_self": "Mensaje a ti mismo",
+ "broadcast": "Difusión",
+ "broadcast_msg": "Mensaje de difusión:",
+ "broadcast_sent": "Enviado a %n chats"
 }

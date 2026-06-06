@@ -357,5 +357,8 @@
  "folders": "Folders",
  "folder_new": "New folder",
  "no_folders": "No folders yet",
- "note_to_self": "Message yourself"
+ "note_to_self": "Message yourself",
+ "broadcast": "Broadcast",
+ "broadcast_msg": "Broadcast message:",
+ "broadcast_sent": "Sent to %n chats"
 }
