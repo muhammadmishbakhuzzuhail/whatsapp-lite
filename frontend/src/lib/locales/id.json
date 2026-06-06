@@ -286,5 +286,9 @@
  "call_rejected": "Ditolak",
  "call_reject": "Tolak",
  "calls_empty": "Belum ada panggilan",
- "ok": "OK"
+ "ok": "OK",
+ "retention": "Retensi pesan",
+ "retention_d": "Pesan lama dihapus otomatis dari lokal agar app tetap cepat. Berbintang & disematkan selalu disimpan.",
+ "retention_days": "{n} hari",
+ "retention_forever": "Selamanya"
 }

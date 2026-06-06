@@ -1,13 +1,18 @@
 <script>
   import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted } from "../../stores.js";
-  import { getProfile, getSettingsItems } from "../../services/data.js";
+  import { getProfile, getSettingsItems, getRetention, setRetention } from "../../services/data.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import LangPicker from "../common/LangPicker.svelte";
   import { initial } from "../util.js";
+  import { onMount } from "svelte";
   import { t, locale } from "../i18n.js";
   const me = getProfile();
   const settingsItems = getSettingsItems();
   const THEME_MODES = ["light", "dark", "system"];
+  const RETENTIONS = [30, 90, 180, 0]; // 0 = selamanya
+  let retDays = 90;
+  onMount(async () => { retDays = await getRetention(); });
+  function pickRetention(d) { retDays = d; setRetention(d); }
   const toggleLock = () => ($pinSet ? removePin() : beginSetPin());
 
   const icons = {
@@ -91,6 +96,20 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
       <div class="grow"><div class="si-name">{$t("show_deleted")}</div><div class="si-desc">{$t("show_deleted_d")}</div></div>
       <span class="switch {$showDeleted ? '' : 'off'}"></span>
+    </div>
+
+    <!-- Retensi pesan (jaga DB ramping) -->
+    <div class="settings-item" style="align-items:flex-start">
+      {@html icons.disk}
+      <div class="grow">
+        <div class="si-name">{$t("retention")}</div>
+        <div class="si-desc">{$t("retention_d")}</div>
+        <div class="theme-modes">
+          {#each RETENTIONS as d}
+            <button class="theme-mode {retDays === d ? 'on' : ''}" on:click={() => pickRetention(d)}>{d === 0 ? $t("retention_forever") : $t("retention_days", { n: d })}</button>
+          {/each}
+        </div>
+      </div>
     </div>
 
     <!-- Privasi -->

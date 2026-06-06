@@ -138,6 +138,10 @@ export function GetRecommendedChannels(arg1) {
   return window['go']['app']['App']['GetRecommendedChannels'](arg1);
 }
 
+export function GetRetention() {
+  return window['go']['app']['App']['GetRetention']();
+}
+
 export function GetStarred() {
   return window['go']['app']['App']['GetStarred']();
 }
@@ -312,6 +316,10 @@ export function SetMyName(arg1) {
 
 export function SetPrivacy(arg1, arg2) {
   return window['go']['app']['App']['SetPrivacy'](arg1, arg2);
+}
+
+export function SetRetention(arg1) {
+  return window['go']['app']['App']['SetRetention'](arg1);
 }
 
 export function StarMessage(arg1, arg2, arg3, arg4, arg5) {

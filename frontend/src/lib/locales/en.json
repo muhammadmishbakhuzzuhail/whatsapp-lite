@@ -286,5 +286,9 @@
  "call_rejected": "Declined",
  "call_reject": "Decline",
  "calls_empty": "No calls yet",
- "ok": "OK"
+ "ok": "OK",
+ "retention": "Message retention",
+ "retention_d": "Older messages are auto-removed locally to keep the app fast. Starred & pinned are always kept.",
+ "retention_days": "{n} days",
+ "retention_forever": "Forever"
 }

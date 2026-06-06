@@ -257,6 +257,15 @@ export function rejectCall(jid, callID) {
   if (LIVE) A.RejectCall(jid, callID);
 }
 
+// --- Setelan: retensi pesan (hari; 0 = selamanya) ---
+export async function getRetention() {
+  if (LIVE) return await A.GetRetention();
+  return 90;
+}
+export function setRetention(days) {
+  if (LIVE) A.SetRetention(days);
+}
+
 // --- Status / Stories ---
 export async function getStatuses() {
   if (LIVE) return (await A.GetStatuses()) || [];

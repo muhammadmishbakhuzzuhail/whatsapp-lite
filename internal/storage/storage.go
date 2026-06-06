@@ -213,6 +213,11 @@ var schemaMigrations = []struct {
 			video INTEGER NOT NULL DEFAULT 0, grp INTEGER NOT NULL DEFAULT 0,
 			status TEXT NOT NULL DEFAULT 'missed', ts INTEGER NOT NULL)`,
 	}},
+	// v4: KV setelan ringan (mis. retention_days) + auto_vacuum agar VACUUM
+	// pasca-prune mengembalikan ruang ke OS.
+	{4, []string{
+		`CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)`,
+	}},
 }
 
 // runMigrations menjalankan langkah dgn versi > user_version saat ini, urut,

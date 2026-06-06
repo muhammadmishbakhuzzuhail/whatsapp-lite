@@ -72,6 +72,8 @@ export function GetProfile():Promise<app.ProfileDTO>;
 
 export function GetRecommendedChannels(arg1:string):Promise<Array<app.ChannelDTO>>;
 
+export function GetRetention():Promise<number>;
+
 export function GetStarred():Promise<Array<app.SearchHitDTO>>;
 
 export function GetState():Promise<string>;
@@ -159,6 +161,8 @@ export function SetMyAbout(arg1:string):Promise<void>;
 export function SetMyName(arg1:string):Promise<void>;
 
 export function SetPrivacy(arg1:string,arg2:string):Promise<void>;
+
+export function SetRetention(arg1:number):Promise<void>;
 
 export function StarMessage(arg1:string,arg2:string,arg3:string,arg4:boolean,arg5:boolean):Promise<void>;
 

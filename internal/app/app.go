@@ -37,7 +37,17 @@ type App struct {
 	labelsMu sync.RWMutex      // melindungi labels
 	labels   map[string]string // label kontak lokal (jid → nama), cache dari DB
 
+	retentionDays int // 0 = simpan selamanya; >0 = prune pesan lebih tua (kec. berbintang/disematkan)
+
 	wq chan func() // antrian tulis-DB serial (off the whatsmeow socket loop)
+}
+
+// retentionCutoff = batas unix; pesan lebih tua di-prune. 0 bila retensi mati.
+func (a *App) retentionCutoff() int64 {
+	if a.retentionDays <= 0 {
+		return 0
+	}
+	return time.Now().AddDate(0, 0, -a.retentionDays).Unix()
 }
 
 // bg mengantre kerja tulis-DB ke writer tunggal. Handler whatsmeow dipanggil
@@ -112,6 +122,18 @@ func (a *App) Startup(ctx context.Context) {
 	_ = os.MkdirAll(a.mediaDir, 0o755)
 	a.startMediaEviction(512 << 20) // cap cache media ~512MB (LRU by modtime)
 
+	// Retensi pesan: default 90 hari. Prune + VACUUM sekali saat boot (off-loop)
+	// → app.db tetap ramping walau riwayat besar. Berbintang/disematkan aman.
+	a.retentionDays = atoiDef(store.GetMeta(ctx, "retention_days", "90"), 90)
+	a.bg(func() {
+		if cut := a.retentionCutoff(); cut > 0 {
+			if n, _ := a.store.PruneMessages(a.ctx, cut); n > 0 {
+				_ = a.store.Vacuum(a.ctx)
+				runtime.EventsEmit(a.ctx, "wa:sync", "")
+			}
+		}
+	})
+
 	// IPC single-instance: instance ke-2 yang gagal flock akan men-dial socket ini
 	// → kita angkat window ke depan (bukan diam).
 	sock := filepath.Join(dataDir, ".ipc.sock")
@@ -154,6 +176,9 @@ func (a *App) wireEvents(eng *engine.Engine, store *storage.Store) {
 	// (ribuan baris → 1 fsync). Off-socket-loop lewat antrian writer.
 	eng.OnHistorySync(func(convs []engine.HistoryConversation, pushnames map[string]string) {
 		a.bg(func() {
+			// Retensi saat ingest: jangan simpan pesan lebih tua dari cutoff →
+			// app.db tak pernah bengkak dari history-sync besar.
+			cutoff := a.retentionCutoff()
 			// Tulis berkelompok (~2000 pesan/tx) — bukan satu transaksi raksasa →
 			// puncak memori + pertumbuhan WAL terbatas saat blob history besar.
 			const batch = 2000
@@ -173,6 +198,9 @@ func (a *App) wireEvents(eng *engine.Engine, store *storage.Store) {
 					JID: cj, Name: c.Name, TS: c.Timestamp, Unread: c.Unread, Pinned: c.Pinned, Archived: c.Archived,
 				})
 				for _, m := range c.Messages {
+					if cutoff > 0 && m.Timestamp.Unix() < cutoff {
+						continue // lebih tua dari retensi → lewati
+					}
 					bmsgs = append(bmsgs, storage.Message{
 						ID: m.ID, ChatJID: cj, Sender: m.Sender, PushName: m.PushName,
 						Text: m.Text, Kind: m.Kind, Thumb: m.Thumb, Media: m.Media,
