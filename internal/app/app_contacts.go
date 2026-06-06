@@ -58,17 +58,21 @@ func (a *App) GetProfile() ProfileDTO {
 	return ProfileDTO{Name: name, Phone: phone, About: a.eng.ContactAbout(a.ctx, self), Jid: a.eng.CanonicalJID(self)}
 }
 
-// SetMyPhoto mengganti foto profil sendiri dari data-URI (di-encode JPEG di FE).
-func (a *App) SetMyPhoto(dataURI string) {
+// SetMyPhoto mengganti foto profil sendiri (full + preview data-URI JPEG dari FE).
+func (a *App) SetMyPhoto(fullURI, previewURI string) {
 	if a.eng == nil {
 		return
 	}
-	_, data, err := decodeDataURI(dataURI)
+	_, full, err := decodeDataURI(fullURI)
 	if err != nil {
 		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
 		return
 	}
-	if err := a.eng.SetOwnPhoto(a.ctx, data); err != nil {
+	var preview []byte
+	if previewURI != "" {
+		_, preview, _ = decodeDataURI(previewURI)
+	}
+	if err := a.eng.SetOwnPhoto(a.ctx, full, preview); err != nil {
 		runtime.EventsEmit(a.ctx, "wa:error", err.Error())
 		return
 	}

@@ -14,18 +14,20 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
-// SetOwnPhoto menyetel foto profil sendiri (avatar = JPEG; nil = hapus).
-func (e *Engine) SetOwnPhoto(ctx context.Context, avatar []byte) error {
+// SetOwnPhoto menyetel foto profil sendiri (full + preview JPEG; nil = hapus).
+// WhatsApp resmi mengirim DUA node (image 640² + preview ~96²); hanya image saja
+// kadang tak memunculkan avatar kecil → sertakan keduanya.
+func (e *Engine) SetOwnPhoto(ctx context.Context, full, preview []byte) error {
 	if e.Client.Store.ID == nil {
 		return errors.New("belum login")
 	}
 	var content interface{}
-	if avatar != nil {
-		content = []waBinary.Node{{
-			Tag:     "picture",
-			Attrs:   waBinary.Attrs{"type": "image"},
-			Content: avatar,
-		}}
+	if full != nil {
+		nodes := []waBinary.Node{{Tag: "picture", Attrs: waBinary.Attrs{"type": "image"}, Content: full}}
+		if preview != nil {
+			nodes = append(nodes, waBinary.Node{Tag: "picture", Attrs: waBinary.Attrs{"type": "preview"}, Content: preview})
+		}
+		content = nodes
 	}
 	_, err := e.Client.DangerousInternals().SendIQ(ctx, whatsmeow.DangerousInfoQuery{
 		Namespace: "w:profile:picture",

@@ -198,7 +198,7 @@ export function SetMyAbout(arg1:string):Promise<void>;
 
 export function SetMyName(arg1:string):Promise<void>;
 
-export function SetMyPhoto(arg1:string):Promise<void>;
+export function SetMyPhoto(arg1:string,arg2:string):Promise<void>;
 
 export function SetPrivacy(arg1:string,arg2:string):Promise<void>;
 

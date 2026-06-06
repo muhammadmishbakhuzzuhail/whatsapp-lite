@@ -22,15 +22,18 @@
     if (!f) return;
     const img = new Image();
     img.onload = () => {
-      const C = 640, cv = document.createElement("canvas");
-      cv.width = C; cv.height = C;
-      const ctx = cv.getContext("2d");
-      const s = Math.max(C / img.width, C / img.height);
-      const w = img.width * s, h = img.height * s;
-      ctx.drawImage(img, (C - w) / 2, (C - h) / 2, w, h);
-      const uri = cv.toDataURL("image/jpeg", 0.9);
-      photoPreview = uri;
-      setMyPhoto(uri);
+      const sq = (C, q) => {
+        const cv = document.createElement("canvas");
+        cv.width = C; cv.height = C;
+        const ctx = cv.getContext("2d");
+        const s = Math.max(C / img.width, C / img.height);
+        const w = img.width * s, h = img.height * s;
+        ctx.drawImage(img, (C - w) / 2, (C - h) / 2, w, h);
+        return cv.toDataURL("image/jpeg", q);
+      };
+      const full = sq(640, 0.9), preview = sq(96, 0.8);
+      photoPreview = full;
+      setMyPhoto(full, preview); // full 640² + preview 96² (ala WhatsApp resmi)
       pushToast($t("photo_updated"), "ok");
     };
     img.onerror = () => pushToast($t("err_generic"));

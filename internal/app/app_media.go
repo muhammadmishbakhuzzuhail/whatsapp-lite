@@ -233,9 +233,12 @@ func (a *App) startMediaEviction(capBytes int64) {
 		var total int64
 		for _, e := range entries {
 			name := e.Name()
-			if strings.HasPrefix(name, "av_") || strings.HasSuffix(name, ".none") || strings.Contains(name, ".sent.") {
-				continue // avatar kecil, marker, media KELUAR (tanpa proto unduh-ulang) → biarkan
+			if strings.HasPrefix(name, "av_") || strings.HasSuffix(name, ".none") {
+				continue // avatar kecil + marker → biarkan
 			}
+			// CATATAN: ".sent.*" (media keluar, tanpa proto unduh-ulang) DULU
+			// dikecualikan → tumbuh tanpa batas. Kini IKUT eviction LRU: cap disk
+			// terjaga; konsekuensinya media-kirim lama bisa hilang dari pratinjau.
 			info, err := e.Info()
 			if err != nil {
 				continue

@@ -389,8 +389,8 @@ export function setMyAbout(text) {
   if (LIVE) A.SetMyAbout(text);
 }
 // Ganti foto profil sendiri (data-URI JPEG; di-encode di FE via canvas).
-export function setMyPhoto(dataURI) {
-  if (LIVE) A.SetMyPhoto(dataURI);
+export function setMyPhoto(fullURI, previewURI) {
+  if (LIVE) A.SetMyPhoto(fullURI, previewURI || "");
 }
 export async function createChannel(name, desc) { if (LIVE) return await A.CreateChannel(name, desc || ""); return ""; }
 export async function getBusinessProfile(jid) { if (LIVE) return await A.GetBusinessProfile(jid); return { isBiz: false }; }
