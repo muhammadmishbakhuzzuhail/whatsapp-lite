@@ -63,8 +63,9 @@
   async function loadRequests() { reqFor = chat.id; requests = await getGroupRequests(chat.id); }
   function decideReq(jid, approve) {
     updateGroupRequest(chat.id, [jid], approve);
-    requests = requests.filter((r) => r.jid !== jid);
+    requests = requests.filter((r) => r.jid !== jid); // optimistik
     reloadSoon();
+    setTimeout(() => { reqFor = null; loadRequests(); }, 1500); // rekonsiliasi server
   }
   function memberAction(p, action) {
     if (action === "remove") {
@@ -121,11 +122,22 @@
   function pickPhoto() { photoInput && photoInput.click(); }
   function onPhoto(e) {
     const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = () => { setGroupPhoto(chat.id, r.result); reloadSoon(); };
-    r.readAsDataURL(f);
     e.target.value = "";
+    if (!f) return;
+    // WhatsApp WAJIB JPEG persegi → encode via kanvas 640² (PNG/besar ditolak).
+    const img = new Image();
+    img.onload = () => {
+      const C = 640, cv = document.createElement("canvas");
+      cv.width = C; cv.height = C;
+      const ctx = cv.getContext("2d");
+      const s = Math.max(C / img.width, C / img.height);
+      const w = img.width * s, h = img.height * s;
+      ctx.drawImage(img, (C - w) / 2, (C - h) / 2, w, h);
+      setGroupPhoto(chat.id, cv.toDataURL("image/jpeg", 0.9));
+      reloadSoon();
+    };
+    img.src = URL.createObjectURL(f);
+    return;
   }
 </script>
 
@@ -271,7 +283,8 @@
               <div class="media-cell doc" title={m.text}><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div>
             {:else}
               <button class="media-cell" on:click={() => openMedia(m)}>
-                <img src={`/media/${chat.id}/${m.id}`} alt="" loading="lazy" />
+                <img src={`/media/${chat.id}/${m.id}`} alt="" loading="lazy"
+                  on:error={(e) => (e.target.closest('.media-cell').style.display = 'none')} />
                 {#if m.type === "video" || m.type === "gif"}<span class="media-play">▶</span>{/if}
               </button>
             {/if}

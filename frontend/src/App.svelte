@@ -34,6 +34,11 @@
   function onKey(e) {
     const mod = e.ctrlKey || e.metaKey;
     const k = e.key.toLowerCase();
+    // Saat fokus di input/textarea/contenteditable → hanya Escape yang lewat,
+    // shortcut lain JANGAN dibajak (cegah Ctrl+F/K/] mengganggu pengetikan).
+    const el = e.target;
+    const typing = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+    if (typing && e.key !== "Escape") return;
     if (e.key === "Escape") {
       if (shortcutsOpen) { shortcutsOpen = false; return; }
       if ($lightbox) lightbox.set(null);

@@ -102,10 +102,16 @@
   function emojiOnly(s) {
     const t = (s || "").trim();
     if (!t) return 0;
-    const stripped = t.replace(/[\p{Extended_Pictographic}\p{Emoji_Component}‍️⃣]/gu, "").trim();
+    // Buang emoji + komponen (ZWJ/VS16/keycap) + bendera (regional indicator) + spasi.
+    const stripped = t.replace(/[\p{Extended_Pictographic}\p{Emoji_Component}\p{Regional_Indicator}‍️⃣\s]/gu, "");
     if (stripped) return 0; // ada teks biasa → bukan emoji-only
-    const m = t.match(/\p{Extended_Pictographic}/gu);
-    return m ? m.length : 0;
+    // Hitung per-grapheme (keluarga/ZWJ & bendera = 1 emoji), bukan per-codepoint.
+    try {
+      const seg = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+      return [...seg.segment(t)].filter((x) => x.segment.trim()).length;
+    } catch (e) {
+      return (t.match(/\p{Extended_Pictographic}/gu) || []).length;
+    }
   }
   $: eN = msg.type === "text" && !deletedView ? emojiOnly(source) : 0;
   $: emojiClass = eN > 0 && eN <= 6 ? (eN <= 3 ? "emoji-lg" : "emoji-md") : "";
