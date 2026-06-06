@@ -291,7 +291,8 @@ func (a *App) attachReactions(out []MessageDTO, chat string) {
 	}
 }
 
-// GetMessages: 200 pesan terbaru.
+// GetMessages: 80 pesan terbaru (muat awal ringan; sisanya via loadOlder saat
+// scroll-up). Lebih sedikit bubble/thumb di DOM → heap & WebProcess lebih kecil.
 func (a *App) GetMessages(jid string) (out []MessageDTO) {
 	out = []MessageDTO{}
 	defer func() {
@@ -303,7 +304,7 @@ func (a *App) GetMessages(jid string) (out []MessageDTO) {
 	if a.store == nil {
 		return
 	}
-	ms, err := a.store.ListMessages(a.ctx, jid, 200)
+	ms, err := a.store.ListMessages(a.ctx, jid, 80)
 	if err != nil {
 		return
 	}
