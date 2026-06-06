@@ -1,5 +1,5 @@
 <script>
-  import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn } from "../../stores.js";
+  import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted } from "../../stores.js";
   import { getProfile, getSettingsItems } from "../../services/data.js";
   import { TRANSLATE_LANGS } from "../langs.js";
   import LangPicker from "../common/LangPicker.svelte";
@@ -86,6 +86,13 @@
       <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4zM15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/></svg>
       <div class="grow"><div class="si-name">{$t("notif_sound")}</div><div class="si-desc">{$soundOn ? $t("active") : $t("off")}</div></div>
       <span class="switch {$soundOn ? '' : 'off'}"></span>
+    </div>
+
+    <!-- Anti-delete: lihat pesan yang ditarik pengirim -->
+    <div class="settings-item" role="button" tabindex="0" on:click={() => showDeleted.update((v) => !v)} on:keydown={(e) => e.key === "Enter" && showDeleted.update((v) => !v)}>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
+      <div class="grow"><div class="si-name">{$t("show_deleted")}</div><div class="si-desc">{$t("show_deleted_d")}</div></div>
+      <span class="switch {$showDeleted ? '' : 'off'}"></span>
     </div>
 
     <!-- Privasi -->

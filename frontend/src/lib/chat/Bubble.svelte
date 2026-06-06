@@ -5,7 +5,7 @@
   import { t } from "../i18n.js";
   import { translateMessage } from "../../services/translate.js";
   import { LIVE, senderColorFor, avatarUrl, getLinkPreview, votePoll, getPollVotes, onEvent } from "../../services/data.js";
-  import { reactMessage, deleteMessage, starMessage, replyDraft, forwardDraft, activeChatId, chats, translateLang, editDraft, pushToast, pinMessageAction, showMessageInfo, lightbox, selectMode, selectedIdx, enterSelect, toggleSelect, jumpMsg, reactionTarget, openProfile } from "../../stores.js";
+  import { reactMessage, deleteMessage, starMessage, replyDraft, forwardDraft, activeChatId, chats, translateLang, editDraft, pushToast, pinMessageAction, showMessageInfo, lightbox, selectMode, selectedIdx, enterSelect, toggleSelect, jumpMsg, reactionTarget, openProfile, showDeleted } from "../../stores.js";
 
   export let msg;
   export let group = false;
@@ -14,18 +14,24 @@
   export let idx;
   export let peerName = "";
 
+  // Anti-delete: pesan ditarik pengirim. revokedShown = tampilkan isi + banner;
+  // deletedView = sembunyikan isi (placeholder) — legacy 'deleted' ATAU revoked
+  // saat toggle "lihat pesan dihapus" OFF.
+  $: revokedShown = !!msg.revoked && $showDeleted;
+  $: deletedView = msg.type === "deleted" || (!!msg.revoked && !$showDeleted);
   $: stickerBubble = msg.type === "sticker" || msg.type === "gif";
-  $: isMedia = msg.type === "image" || msg.type === "video" || msg.type === "sticker" || msg.type === "gif";
+  $: isMedia = !deletedView && (msg.type === "image" || msg.type === "video" || msg.type === "sticker" || msg.type === "gif");
   // Stiker & GIF → bubble TRANSPARAN (tanpa kartu putih, hanya nama yg ber-pill).
   // Foto/video → KARTU (bg + padding tipis), rasio natural (min/max), caption di bawah.
-  $: bubbleClass = msg.type === "sticker"
+  $: bubbleClass = deletedView ? "txt"
+    : msg.type === "sticker"
     ? "media sticker-bubble"
     : msg.type === "gif"
       ? "media sticker-bubble gif-bubble"
       : (msg.type === "image" || msg.type === "video")
         ? "media imgcard"
         : msg.type === "voice" ? "voice"
-          : (msg.type === "text" || msg.type === "deleted") ? "txt" : "";
+          : msg.type === "text" ? "txt" : "";
   $: isGroupIn = group && msg.dir === "in";
   $: showSender = isGroupIn && msg.sender && firstOfRun;
   $: senderCol = msg.senderColor || senderColorFor(msg.senderId || msg.sender || "");
@@ -254,11 +260,11 @@
     </div>
   {/if}
 
-  <div class="bubble {bubbleClass} {msg.type === 'deleted' ? 'deleted' : ''}"
+  <div class="bubble {bubbleClass} {deletedView ? 'deleted' : ''}"
     class:withtr={!!translated}
-    class:hascap={(msg.type === 'image' || msg.type === 'video') && caption}
-    class:nohead={(msg.type === 'image' || msg.type === 'video') && !(showSender || msg.forwarded || msg.quote)}>
-    {#if msg.type !== "deleted" && !$selectMode}
+    class:hascap={isMedia && (msg.type === 'image' || msg.type === 'video') && caption}
+    class:nohead={isMedia && (msg.type === 'image' || msg.type === 'video') && !(showSender || msg.forwarded || msg.quote || revokedShown)}>
+    {#if !deletedView && !$selectMode}
       <div class="msg-actions">
         <button title="👍" on:click={() => react('👍')}>👍</button>
         <button title={$t("reaction_remove")} on:click={openReact}>
@@ -273,7 +279,7 @@
       </div>
     {/if}
 
-    {#if showSender || (msg.type === "deleted") || msg.forwarded || msg.quote}
+    {#if showSender || deletedView || revokedShown || msg.forwarded || msg.quote}
       <div class="head" class:sticker-head={stickerBubble}>
         {#if showSender}
           <span class="sender" style="color:{senderCol}" role="button" tabindex="0"
@@ -282,11 +288,14 @@
             {msg.sender}{#if !msg.senderSaved && msg.senderPhone}<span class="sender-phone">{msg.senderPhone}</span>{/if}
           </span>
         {/if}
-        {#if msg.type === "deleted"}
+        {#if deletedView}
           <span class="text deleted-text">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>
             {msg.dir === "out" ? $t("deleted_out") : $t("deleted_in")}<span class="t-spacer" class:out={msg.dir === 'out'} aria-hidden="true">{msg.time}</span>
           </span>
+        {:else if revokedShown}
+          <!-- anti-delete: banner kecil di atas isi asli yg tetap ditampilkan -->
+          <span class="revoked-banner"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>{msg.dir === "out" ? $t("deleted_out") : $t("deleted_in")}</span>
         {/if}
         {#if msg.forwarded}
           <div class="forwarded"><svg viewBox="0 0 24 24"><path d="M10 9V5l8 7-8 7v-4c-5 0-8 2-9 5 0-6 3-9 9-9z"/></svg>{$t("forwarded")}</div>
@@ -300,7 +309,9 @@
       </div>
     {/if}
 
-    {#if msg.type === "text"}
+    {#if deletedView}
+      <!-- isi disembunyikan; placeholder ada di head -->
+    {:else if msg.type === "text"}
       {#if linkPrev}
         <a class="link-prev" href={linkPrev.url} target="_blank" rel="noreferrer">
           {#if linkPrev.image}<img class="lp-img" src={linkPrev.image} alt="" on:error={(e) => (e.target.style.display = 'none')} />{/if}

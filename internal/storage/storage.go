@@ -51,9 +51,10 @@ type Message struct {
 	QuotedSender string
 	QuotedText   string
 
-	Status string // sent | delivered | read (pesan sendiri)
-	Pinned bool   // disematkan di chat
-	Edited bool   // pernah disunting
+	Status  string // sent | delivered | read (pesan sendiri)
+	Pinned  bool   // disematkan di chat
+	Edited  bool   // pernah disunting
+	Revoked bool   // ditarik pengirim (hapus-utk-semua) — konten tetap disimpan (anti-delete)
 }
 
 // Store membungkus koneksi SQLite ke app.db.
@@ -199,6 +200,10 @@ var schemaMigrations = []struct {
 			chat_jid TEXT NOT NULL, msg_id TEXT NOT NULL, recipient TEXT NOT NULL,
 			status TEXT NOT NULL, ts INTEGER NOT NULL,
 			PRIMARY KEY (chat_jid, msg_id, recipient))`,
+	}},
+	// v2: anti-delete — simpan flag pesan ditarik (konten tak dihapus).
+	{2, []string{
+		`ALTER TABLE messages ADD COLUMN revoked INTEGER NOT NULL DEFAULT 0`,
 	}},
 }
 

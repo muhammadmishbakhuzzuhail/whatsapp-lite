@@ -74,8 +74,8 @@ ON CONFLICT(jid) DO UPDATE SET
 func (s *Store) ListMessages(ctx context.Context, chatJID string, limit int) ([]Message, error) {
 	// Pilih kolom eksplisit (TANPA media/proto besar) → list ringan.
 	rows, err := s.db.QueryContext(ctx, `
-SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited FROM (
-	SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited
+SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited, revoked FROM (
+	SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited, revoked
 	FROM messages WHERE chat_jid = ? ORDER BY ts DESC LIMIT ?
 ) ORDER BY ts ASC`, chatJID, limit)
 	if err != nil {
@@ -87,15 +87,16 @@ SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_i
 	for rows.Next() {
 		var m Message
 		var ts int64
-		var fromMe, pinned, edited int
+		var fromMe, pinned, edited, revoked int
 		if err := rows.Scan(&m.ID, &m.ChatJID, &m.Sender, &m.PushName, &m.Text, &m.Kind, &m.Thumb, &ts, &fromMe,
-			&m.QuotedID, &m.QuotedSender, &m.QuotedText, &m.Status, &pinned, &edited); err != nil {
+			&m.QuotedID, &m.QuotedSender, &m.QuotedText, &m.Status, &pinned, &edited, &revoked); err != nil {
 			return nil, err
 		}
 		m.Timestamp = time.Unix(ts, 0)
 		m.FromMe = fromMe != 0
 		m.Pinned = pinned != 0
 		m.Edited = edited != 0
+		m.Revoked = revoked != 0
 		out = append(out, m)
 	}
 	return out, rows.Err()
@@ -344,8 +345,8 @@ func (s *Store) GetMedia(ctx context.Context, chatJID, id string) (string, error
 // beforeTS (untuk pagination "scroll ke atas" muat riwayat lama), urut lama→baru.
 func (s *Store) ListMessagesBefore(ctx context.Context, chatJID string, beforeTS int64, limit int) ([]Message, error) {
 	rows, err := s.db.QueryContext(ctx, `
-SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited FROM (
-	SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited
+SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited, revoked FROM (
+	SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_id, quoted_sender, quoted_text, status, pinned_in_chat, edited, revoked
 	FROM messages WHERE chat_jid = ? AND ts < ? ORDER BY ts DESC LIMIT ?
 ) ORDER BY ts ASC`, chatJID, beforeTS, limit)
 	if err != nil {
@@ -356,15 +357,16 @@ SELECT id, chat_jid, sender, push_name, text, kind, thumb, ts, from_me, quoted_i
 	for rows.Next() {
 		var m Message
 		var ts int64
-		var fromMe, pinned, edited int
+		var fromMe, pinned, edited, revoked int
 		if err := rows.Scan(&m.ID, &m.ChatJID, &m.Sender, &m.PushName, &m.Text, &m.Kind, &m.Thumb, &ts, &fromMe,
-			&m.QuotedID, &m.QuotedSender, &m.QuotedText, &m.Status, &pinned, &edited); err != nil {
+			&m.QuotedID, &m.QuotedSender, &m.QuotedText, &m.Status, &pinned, &edited, &revoked); err != nil {
 			return nil, err
 		}
 		m.Timestamp = time.Unix(ts, 0)
 		m.FromMe = fromMe != 0
 		m.Pinned = pinned != 0
 		m.Edited = edited != 0
+		m.Revoked = revoked != 0
 		out = append(out, m)
 	}
 	return out, rows.Err()
@@ -452,11 +454,11 @@ func (s *Store) DeleteLocalMessage(ctx context.Context, chatJID, id string) erro
 
 // MarkDeleted menandai pesan "dihapus" (revoke/hapus-utk-semua) — baris tetap ada
 // agar muncul placeholder "pesan dihapus" seperti WhatsApp. Kosongkan isi/media.
+// MarkDeleted menandai pesan ditarik pengirim (hapus-utk-semua). ANTI-DELETE:
+// konten asli TETAP disimpan (text/media/thumb/kind utuh), hanya set revoked=1.
+// UI memutuskan tampilkan isi+tag "dihapus" atau placeholder (toggle pengguna).
 func (s *Store) MarkDeleted(ctx context.Context, chatJID, id string) error {
-	// text='' → trigger messages_fts_au mengeluarkan pesan dari indeks pencarian.
-	_, err := s.db.ExecContext(ctx, `
-UPDATE messages SET kind='deleted', text='', thumb='', media='', quoted_id='', quoted_sender='', quoted_text=''
-WHERE chat_jid = ? AND id = ?`, chatJID, id)
+	_, err := s.db.ExecContext(ctx, `UPDATE messages SET revoked = 1 WHERE chat_jid = ? AND id = ?`, chatJID, id)
 	return err
 }
 

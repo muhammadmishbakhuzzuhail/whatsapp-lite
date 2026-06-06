@@ -53,6 +53,12 @@ let storedSound = null;
 try { storedSound = localStorage.getItem("wa-sound"); } catch (e) {}
 export const soundOn = writable(storedSound !== "0");
 soundOn.subscribe((v) => { try { localStorage.setItem("wa-sound", v ? "1" : "0"); } catch (e) {} });
+
+// Anti-delete: tampilkan isi pesan yg ditarik pengirim + tag "dihapus". Default ON.
+let storedShowDel = null;
+try { storedShowDel = localStorage.getItem("wa-show-deleted"); } catch (e) {}
+export const showDeleted = writable(storedShowDel !== "0");
+showDeleted.subscribe((v) => { try { localStorage.setItem("wa-show-deleted", v ? "1" : "0"); } catch (e) {} });
 let _actx = null;
 function playNotifSound() {
   if (!get(soundOn)) return;

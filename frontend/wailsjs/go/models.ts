@@ -344,6 +344,7 @@ export namespace app {
 	    status: string;
 	    pinned: boolean;
 	    edited: boolean;
+	    revoked: boolean;
 	    ts: number;
 	    quoteId: string;
 	    quoteName: string;
@@ -370,6 +371,7 @@ export namespace app {
 	        this.status = source["status"];
 	        this.pinned = source["pinned"];
 	        this.edited = source["edited"];
+	        this.revoked = source["revoked"];
 	        this.ts = source["ts"];
 	        this.quoteId = source["quoteId"];
 	        this.quoteName = source["quoteName"];
