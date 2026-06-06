@@ -64,6 +64,7 @@
       {@html icons.globe}
       <div class="grow">
         <div class="si-name">{$t("language")}</div>
+        <div class="si-desc">{$t("language_d")}</div>
       </div>
       <select class="lang-select" bind:value={$locale}>
         {#each languages as l}<option value={l.code}>{l.label}</option>{/each}
@@ -74,8 +75,8 @@
     <div class="settings-item lang-item">
       <svg viewBox="0 0 24 24"><path d="M4 5h7M9 3v2c0 4-2 7-5 9M5 9c0 3 3 5 6 5"/><path d="M14 19l3-7 3 7M15.5 16h3"/></svg>
       <div class="grow">
-        <div class="si-name">Bahasa terjemahan</div>
-        <div class="si-desc">Pesan diterjemahkan ke bahasa ini</div>
+        <div class="si-name">{$t("translate_lang")}</div>
+        <div class="si-desc">{$t("translate_lang_d")}</div>
       </div>
       <LangPicker options={TRANSLATE_LANGS} value={$translateLang} onSelect={(c) => translateLang.set(c)} />
     </div>
