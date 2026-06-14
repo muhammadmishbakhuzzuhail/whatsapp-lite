@@ -4,12 +4,47 @@
 
   let captions = []; // caption PER item (ala WhatsApp: tiap foto punya caption sendiri)
   let names = [];    // nama file PER item (dokumen bisa di-rename sebelum kirim)
+  let editURIs = []; // dataURI hasil edit (crop/rotate) PER item; kosong = pakai asli
   let idx = 0;
   let last = null;
   let once = false; // sekali-lihat (view-once): toggle di preview, bukan attach menu
-  $: if ($mediaDraft && $mediaDraft !== last) { last = $mediaDraft; captions = ($mediaDraft.items || []).map(() => ""); names = ($mediaDraft.items || []).map((it) => it.name || ""); idx = 0; once = !!$mediaDraft.viewOnce; }
+  $: if ($mediaDraft && $mediaDraft !== last) { last = $mediaDraft; const its = $mediaDraft.items || []; captions = its.map(() => ""); names = its.map((it) => it.name || ""); editURIs = its.map((it) => it.dataURI); idx = 0; once = !!$mediaDraft.viewOnce; cropping = false; cropBox = null; }
   $: items = $mediaDraft?.items || [];
   $: cur = items[idx];
+
+  // --- Edit foto: rotate (bake langsung) + crop (drag persegi) ---
+  // Rotate di-bake tiap klik → crop selalu bekerja di gambar tegak (tak perlu
+  // hitung rotasi saat crop → bebas-bug). Hasil disimpan di editURIs[idx].
+  let imgEl, cropping = false, cropBox = null, dragStart = null;
+  function loadImg(uri) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = uri; }); }
+  async function rotate(dir) {
+    const im = await loadImg(editURIs[idx]);
+    const c = document.createElement("canvas");
+    c.width = im.naturalHeight; c.height = im.naturalWidth;
+    const x = c.getContext("2d");
+    x.translate(c.width / 2, c.height / 2);
+    x.rotate((dir * Math.PI) / 2);
+    x.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2);
+    editURIs[idx] = c.toDataURL("image/jpeg", 0.92); editURIs = [...editURIs];
+    cropping = false; cropBox = null;
+  }
+  function cropDown(e) { if (!cropping) return; const r = imgEl.getBoundingClientRect(); dragStart = { x: e.clientX - r.left, y: e.clientY - r.top, r }; cropBox = { x: dragStart.x, y: dragStart.y, w: 0, h: 0 }; }
+  function cropMove(e) { if (!dragStart) return; const r = dragStart.r; let x = Math.max(0, Math.min(r.width, e.clientX - r.left)), y = Math.max(0, Math.min(r.height, e.clientY - r.top)); cropBox = { x: Math.min(dragStart.x, x), y: Math.min(dragStart.y, y), w: Math.abs(x - dragStart.x), h: Math.abs(y - dragStart.y) }; }
+  function cropUp() { dragStart = null; }
+  async function applyCrop() {
+    if (!cropBox || cropBox.w < 8 || cropBox.h < 8) { cropping = false; cropBox = null; return; }
+    const im = await loadImg(editURIs[idx]);
+    const r = imgEl.getBoundingClientRect();
+    const scale = Math.min(r.width / im.naturalWidth, r.height / im.naturalHeight); // object-fit:contain
+    const ox = (r.width - im.naturalWidth * scale) / 2, oy = (r.height - im.naturalHeight * scale) / 2;
+    let cx = Math.max(0, (cropBox.x - ox) / scale), cy = Math.max(0, (cropBox.y - oy) / scale);
+    let cw = Math.min(im.naturalWidth - cx, cropBox.w / scale), ch = Math.min(im.naturalHeight - cy, cropBox.h / scale);
+    if (cw < 4 || ch < 4) { cropping = false; cropBox = null; return; }
+    const c = document.createElement("canvas"); c.width = Math.round(cw); c.height = Math.round(ch);
+    c.getContext("2d").drawImage(im, cx, cy, cw, ch, 0, 0, cw, ch);
+    editURIs[idx] = c.toDataURL("image/jpeg", 0.92); editURIs = [...editURIs];
+    cropping = false; cropBox = null;
+  }
 
   function close() { mediaDraft.set(null); captions = []; idx = 0; once = false; }
   async function send() {
@@ -20,7 +55,7 @@
     // Tiap item dikirim dgn caption-nya sendiri.
     for (let i = 0; i < d.items.length; i++) {
       const it = d.items[i];
-      await sendMediaMessage(d.chatId, it.kind, (caps[i] || "").trim(), (names[i] || it.name || "").trim(), it.dataURI, once);
+      await sendMediaMessage(d.chatId, it.kind, (caps[i] || "").trim(), (names[i] || it.name || "").trim(), editURIs[i] || it.dataURI, once);
     }
     captions = []; once = false;
   }
@@ -31,7 +66,7 @@
   }
 </script>
 
-<svelte:window on:keydown={onKey} />
+<svelte:window on:keydown={onKey} on:mousemove={cropMove} on:mouseup={cropUp} />
 
 {#if $mediaDraft && cur}
   <div class="mp-overlay" on:click|self={close}>
@@ -47,16 +82,37 @@
             <audio class="mp-doc-audio" src={cur.dataURI} controls></audio>
           {:else if /\.(png|jpe?g|gif|webp|bmp)$/i.test(cur.name)}
             <img class="mp-doc-img" src={cur.dataURI} alt="" />
-          {:else if /\.pdf$/i.test(cur.name)}
-            <iframe class="mp-doc-frame" src={cur.dataURI} title={cur.name}></iframe>
           {:else}
             <div class="mp-doc-ico"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div>
           {/if}
         </div>
       {:else}
-        <img class="mp-media" src={cur.dataURI} alt="" />
+        <div class="mp-imgwrap" class:cropping>
+          <img class="mp-media" bind:this={imgEl} src={editURIs[idx] || cur.dataURI} alt="" draggable="false" on:mousedown={cropDown} />
+          {#if cropping && cropBox}
+            <div class="mp-cropbox" style="left:{cropBox.x}px;top:{cropBox.y}px;width:{cropBox.w}px;height:{cropBox.h}px"></div>
+          {/if}
+        </div>
       {/if}
     </div>
+    {#if cur.kind === "image"}
+      <div class="mp-edit">
+        {#if cropping}
+          <button class="mp-eb" on:click={() => { cropping = false; cropBox = null; }}>{$t("cancel") || "Batal"}</button>
+          <button class="mp-eb on" on:click={applyCrop}>{$t("apply") || "Terapkan"}</button>
+        {:else}
+          <button class="mp-eb" title={$t("rotate") || "Putar"} on:click={() => rotate(-1)}>
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button class="mp-eb" title={$t("rotate") || "Putar"} on:click={() => rotate(1)}>
+            <svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button class="mp-eb" title={$t("crop") || "Pangkas"} on:click={() => { cropping = true; cropBox = null; }}>
+            <svg viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M2 6h14a2 2 0 0 1 2 2v14"/></svg>
+          </button>
+        {/if}
+      </div>
+    {/if}
     {#if items.length > 1}
       <div class="mp-strip">
         {#each items as it, i}
@@ -98,7 +154,13 @@
   .mp-doc-rename { border:1px solid rgba(255,255,255,.18); outline:none; font-family:inherit; }
   .mp-doc-rename:focus { border-color:var(--accent); background:rgba(255,255,255,.16); }
   .mp-doc-img { max-width:90vw; max-height:70vh; object-fit:contain; border-radius:8px; }
-  .mp-doc-frame { width:min(90vw,680px); height:70vh; border:0; border-radius:8px; background:#fff; }
+  .mp-imgwrap { position:relative; display:inline-flex; }
+  .mp-imgwrap.cropping .mp-media { cursor:crosshair; user-select:none; }
+  .mp-cropbox { position:absolute; border:2px solid #fff; box-shadow:0 0 0 9999px rgba(0,0,0,.45); pointer-events:none; }
+  .mp-edit { display:flex; gap:10px; justify-content:center; padding:6px 16px 0; }
+  .mp-eb { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:20px; padding:8px 14px; cursor:pointer; font:inherit; font-size:13.5px; }
+  .mp-eb svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; }
+  .mp-eb.on { background:var(--accent); }
   .mp-doc-ico { width:120px; height:120px; color:#fff; opacity:.85; }
   .mp-doc-ico svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.5; }
   .mp-doc-audio { width:min(90vw,420px); }
