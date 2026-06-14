@@ -22,3 +22,6 @@ real-data.json
 # OS / editor
 .DS_Store
 *.swp
+
+# Wails build cache (md5 package.json — regenerated)
+/frontend/package.json.md5
