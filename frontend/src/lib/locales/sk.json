@@ -392,5 +392,7 @@
  "no_contacts": "Žiadne uložené kontakty",
  "keep_deleted": "Ponechajte odstránené správy",
  "keep_deleted_d": "Uložiť obsah správ, ktoré ostatní odstránia (anti-delete). Vypnuté = správať sa ako WhatsApp.",
- "rec_voice": "nahrávanie zvuku…"
+ "rec_voice": "nahrávanie zvuku…",
+ "virt_list": "Zoznam virtuálnych správ",
+ "virt_list_d": "Experimentálne – vykresľuje iba viditeľné správy (svetlejšie na veľkých chatoch)"
 }

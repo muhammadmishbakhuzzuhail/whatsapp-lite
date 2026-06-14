@@ -392,5 +392,7 @@
  "no_contacts": "Abekho oxhumana nabo abalondoloziwe",
  "keep_deleted": "Gcina imilayezo esusiwe",
  "keep_deleted_d": "Londoloza okuqukethwe kwemilayezo abanye abayisusayo (anti-delete). Vala = ziphathise okweWhatsApp.",
- "rec_voice": "iqopha umsindo..."
+ "rec_voice": "iqopha umsindo...",
+ "virt_list": "Uhlu lwemiyalezo ebonakalayo",
+ "virt_list_d": "Okokuhlola — nikeza imilayezo ebonakalayo kuphela (ilula ezingxoxweni ezinkulu)"
 }

@@ -392,5 +392,7 @@
  "no_contacts": "Geen opgeslagen contacten",
  "keep_deleted": "Bewaar verwijderde berichten",
  "keep_deleted_d": "Bewaar de inhoud van berichten die anderen verwijderen (anti-verwijderen). Uit = gedragen als WhatsApp.",
- "rec_voice": "audio opnemen..."
+ "rec_voice": "audio opnemen...",
+ "virt_list": "Virtuele berichtenlijst",
+ "virt_list_d": "Experimenteel – geef alleen zichtbare berichten weer (lichter bij grote chats)"
 }

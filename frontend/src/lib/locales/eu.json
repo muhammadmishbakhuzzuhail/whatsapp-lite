@@ -392,5 +392,7 @@
  "no_contacts": "Ez dago gordetako kontakturik",
  "keep_deleted": "Mantendu ezabatutako mezuak",
  "keep_deleted_d": "Gorde besteek ezabatzen dituzten mezuen edukia (ezabatzearen aurkakoa). Desaktibatuta = WhatsApp bezala jokatu.",
- "rec_voice": "audioa grabatzen…"
+ "rec_voice": "audioa grabatzen…",
+ "virt_list": "Mezuen zerrenda birtualak",
+ "virt_list_d": "Esperimentala — errendatu ikusgai mezuak soilik (arinago txat handietan)"
 }

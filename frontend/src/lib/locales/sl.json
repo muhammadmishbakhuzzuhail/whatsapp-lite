@@ -392,5 +392,7 @@
  "no_contacts": "Ni shranjenih stikov",
  "keep_deleted": "Hranite izbrisana sporočila",
  "keep_deleted_d": "Shranite vsebino sporočil, ki jih drugi izbrišejo (proti brisanju). Izklopljen = obnašaj se kot WhatsApp.",
- "rec_voice": "snemanje zvoka …"
+ "rec_voice": "snemanje zvoka …",
+ "virt_list": "Virtualni seznam sporočil",
+ "virt_list_d": "Eksperimentalno — upodobi samo vidna sporočila (svetlejša pri velikih klepetih)"
 }

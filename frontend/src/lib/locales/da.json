@@ -392,5 +392,7 @@
  "no_contacts": "Ingen gemte kontakter",
  "keep_deleted": "Behold slettede beskeder",
  "keep_deleted_d": "Gem indholdet af beskeder, som andre sletter (anti-sletning). Off = opfør dig som WhatsApp.",
- "rec_voice": "optager lyd..."
+ "rec_voice": "optager lyd...",
+ "virt_list": "Virtuel beskedliste",
+ "virt_list_d": "Eksperimentel - gengiv kun synlige beskeder (lettere ved store chats)"
 }

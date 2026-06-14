@@ -392,5 +392,7 @@
  "no_contacts": "没有保存的联系人",
  "keep_deleted": "保留已删除的消息",
  "keep_deleted_d": "保存别人删除（反删除）的消息内容。关闭 = 行为类似于 WhatsApp。",
- "rec_voice": "录制音频..."
+ "rec_voice": "录制音频...",
+ "virt_list": "虚拟消息列表",
+ "virt_list_d": "实验性的——仅渲染可见消息（在大型聊天中更轻）"
 }

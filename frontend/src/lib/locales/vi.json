@@ -392,5 +392,7 @@
  "no_contacts": "Không có liên hệ nào được lưu",
  "keep_deleted": "Giữ tin nhắn đã xóa",
  "keep_deleted_d": "Lưu lại nội dung tin nhắn người khác xóa (chống xóa). Tắt = cư xử như WhatsApp.",
- "rec_voice": "ghi âm…"
+ "rec_voice": "ghi âm…",
+ "virt_list": "Danh sách tin nhắn ảo",
+ "virt_list_d": "Thử nghiệm - chỉ hiển thị các tin nhắn hiển thị (nhẹ hơn trong các cuộc trò chuyện lớn)"
 }

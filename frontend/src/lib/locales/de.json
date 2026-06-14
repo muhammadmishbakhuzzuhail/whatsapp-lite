@@ -392,5 +392,7 @@
  "no_contacts": "Keine gespeicherten Kontakte",
  "keep_deleted": "Gelöschte Nachrichten behalten",
  "keep_deleted_d": "Speichern Sie den Inhalt von Nachrichten, die andere löschen (Anti-Löschen). Aus = Verhalten wie WhatsApp.",
- "rec_voice": "Audio aufnehmen…"
+ "rec_voice": "Audio aufnehmen…",
+ "virt_list": "Virtuelle Nachrichtenliste",
+ "virt_list_d": "Experimentell – Nur sichtbare Nachrichten rendern (leichter bei großen Chats)"
 }

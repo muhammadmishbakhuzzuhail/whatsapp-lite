@@ -392,5 +392,7 @@
  "no_contacts": "Nenhum contato salvo",
  "keep_deleted": "Manter mensagens excluídas",
  "keep_deleted_d": "Salve o conteúdo das mensagens que outras pessoas excluem (anti-exclusão). Desligado = comportar-se como o WhatsApp.",
- "rec_voice": "gravando áudio…"
+ "rec_voice": "gravando áudio…",
+ "virt_list": "Lista de mensagens virtuais",
+ "virt_list_d": "Experimental – renderiza apenas mensagens visíveis (mais leve em chats grandes)"
 }

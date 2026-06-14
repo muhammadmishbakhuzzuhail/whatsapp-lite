@@ -392,5 +392,7 @@
  "no_contacts": "Saxlanmış kontakt yoxdur",
  "keep_deleted": "Silinmiş mesajları saxlayın",
  "keep_deleted_d": "Başqalarının sildiyi mesajların məzmununu yadda saxlayın (silməyə qarşı). Off = WhatsApp kimi davranın.",
- "rec_voice": "audio yazır..."
+ "rec_voice": "audio yazır...",
+ "virt_list": "Virtual mesaj siyahısı",
+ "virt_list_d": "Eksperimental — yalnız görünən mesajları göstərin (böyük söhbətlərdə daha yüngül)"
 }

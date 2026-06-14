@@ -392,5 +392,7 @@
  "no_contacts": "Inga sparade kontakter",
  "keep_deleted": "Behåll raderade meddelanden",
  "keep_deleted_d": "Spara innehållet i meddelanden som andra tar bort (anti-delete). Av = bete dig som WhatsApp.",
- "rec_voice": "spelar in ljud..."
+ "rec_voice": "spelar in ljud...",
+ "virt_list": "Virtuell meddelandelista",
+ "virt_list_d": "Experimentell – återge endast synliga meddelanden (lättare vid stora chattar)"
 }

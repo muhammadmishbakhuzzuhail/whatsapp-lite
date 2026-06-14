@@ -11,6 +11,8 @@
  "all_chats": "All chats",
  "typing": "typing…",
  "rec_voice": "recording audio…",
+ "virt_list": "Virtual message list",
+ "virt_list_d": "Experimental — render only visible messages (lighter on huge chats)",
  "composer_placeholder": "Type a message",
  "empty_conv": "Select a chat to start messaging",
  "no_match": "No chats found.",

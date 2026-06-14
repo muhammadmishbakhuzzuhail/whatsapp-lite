@@ -392,5 +392,7 @@
  "no_contacts": "No hi ha contactes desats",
  "keep_deleted": "Conserveu els missatges suprimits",
  "keep_deleted_d": "Desa el contingut dels missatges que altres eliminen (antisupressió). Apagat = comportar-se com WhatsApp.",
- "rec_voice": "enregistrament d'àudio..."
+ "rec_voice": "enregistrament d'àudio...",
+ "virt_list": "Llista de missatges virtuals",
+ "virt_list_d": "Experimental: mostra només els missatges visibles (més lleuger en xats grans)"
 }

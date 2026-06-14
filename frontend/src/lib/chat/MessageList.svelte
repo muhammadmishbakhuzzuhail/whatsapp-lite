@@ -2,7 +2,7 @@
   import Bubble from "./Bubble.svelte";
   import { t } from "../i18n.js";
   import { tick, beforeUpdate, afterUpdate } from "svelte";
-  import { loadOlder, jumpMsg, wallpapers, lightbox } from "../../stores.js";
+  import { loadOlder, jumpMsg, wallpapers, lightbox, virtList } from "../../stores.js";
   export let messages = [];
   export let group = false;
   export let chatId;
@@ -18,7 +18,7 @@
   let floatVisible = false;
   let _floatTimer;
   let _lastMsgLen = 0;
-  $: chatId, (noMore = false, newCount = 0, _scrolledUnread = null, _lastMsgLen = 0); // reset saat ganti chat
+  $: chatId, (noMore = false, newCount = 0, _scrolledUnread = null, _lastMsgLen = 0, heightMap = new Map(), vStart = 0, vEnd = 0, topPad = 0, botPad = 0); // reset saat ganti chat
   // Pesan bertambah (mis. history on-demand tiba) → buka lagi kemungkinan load-older.
   $: if (messages && messages.length > _lastMsgLen) { noMore = false; _lastMsgLen = messages.length; }
 
@@ -27,6 +27,7 @@
   let _scrolledUnread = null;
   $: if (firstUnreadId && firstUnreadId !== _scrolledUnread && box && items) {
     _scrolledUnread = firstUnreadId;
+    if (VIRT) ensureRendered(items.findIndex((it) => it.m && it.m.id === firstUnreadId));
     tick().then(() => { const d = box && box.querySelector(".unread-divider"); if (d) d.scrollIntoView({ block: "center" }); });
   }
 
@@ -41,6 +42,53 @@
   }
   function pin() { if (box) box.scrollTop = box.scrollHeight; }
 
+  // === Virtualisasi (EKSPERIMENTAL, $virtList) ===
+  // Hanya render item dlm jendela [start,end) + 2 spacer ber-tinggi-terukur.
+  // Tinggi tiap baris diukur setelah render (heightMap, per-key) → spacer akurat
+  // → scrollHeight ≈ nyata → math loadOlder/pin tetap jalan. Default OFF.
+  $: VIRT = $virtList;
+  const EST = 64, OVER = 800;          // tinggi tebakan baris + overscan (px)
+  let heightMap = new Map();           // key item → tinggi terukur
+  let vStart = 0, vEnd = 0, topPad = 0, botPad = 0;
+  $: renderItems = VIRT ? items.slice(vStart, Math.min(vEnd, items.length)) : items;
+  function keyAt(i) { const it = items[i]; return it ? (it.m.id || it.idx) : i; }
+  function hAt(i) { return heightMap.get(keyAt(i)) || EST; }
+  function recomputeWindow() {
+    if (!VIRT || !box || !items) return;
+    const top = box.scrollTop, vh = box.clientHeight || 600;
+    let acc = 0, s = 0;
+    while (s < items.length && acc + hAt(s) < top - OVER) { acc += hAt(s); s++; }
+    let e = s, vis = 0;
+    while (e < items.length && vis < vh + 2 * OVER) { vis += hAt(e); e++; }
+    if (e === s && items.length) e = Math.min(items.length, s + 1);
+    let bp = 0; for (let i = e; i < items.length; i++) bp += hAt(i);
+    vStart = s; vEnd = e; topPad = acc; botPad = bp;
+  }
+  // Ukur tinggi baris terender (anak box: [topSpacer, ...rows, botSpacer]).
+  function measure() {
+    if (!VIRT || !box) return;
+    const kids = box.children, cnt = Math.min(vEnd, items.length) - vStart;
+    let changed = false;
+    for (let i = 0; i < cnt; i++) {
+      const el = kids[i + 1]; if (!el) break;     // +1 lewati topSpacer
+      const h = el.offsetHeight, k = keyAt(vStart + i);
+      if (h && heightMap.get(k) !== h) { heightMap.set(k, h); changed = true; }
+    }
+    if (changed) recomputeWindow();                // tinggi berubah → spacer ulang
+  }
+  // Pastikan idx ada di jendela (jump/unread butuh node di DOM).
+  function ensureRendered(idx) {
+    if (!VIRT || idx < 0) return;
+    if (idx >= vStart && idx < vEnd) return;
+    vStart = Math.max(0, idx - 15);
+    vEnd = Math.min(items.length, idx + 15);
+    let tp = 0; for (let i = 0; i < vStart; i++) tp += hAt(i);
+    let bp = 0; for (let i = vEnd; i < items.length; i++) bp += hAt(i);
+    topPad = tp; botPad = bp;
+  }
+  // Saat items berubah & VIRT, jaga jendela tetap valid.
+  $: if (VIRT && items && box) recomputeWindow();
+
   // Scroll bisa fire 100+×/dtk; nearBottom + updateFloatDate (querySelectorAll +
   // getBoundingClientRect per bubble = reflow paksa) mahal di chat panjang.
   // Coalesce ke 1×/frame via rAF → perilaku sama, jank hilang.
@@ -51,6 +99,7 @@
   }
   function handleScroll() {
     if (!box) return;
+    if (VIRT) recomputeWindow();      // geser jendela render ikut posisi scroll
     follow = nearBottom();            // user di bawah → ikut; scroll-up → lepas
     atBottom = follow;
     if (follow) newCount = 0;
@@ -69,9 +118,14 @@
     if (chatId !== prevChat) {            // (1) buka chat → ke bawah
       prevChat = chatId; prevLastId = lastId; prevLen = messages.length;
       follow = true; atBottom = true; newCount = 0;
-      pin(); requestAnimationFrame(pin); setTimeout(pin, 120); setTimeout(pin, 350);
+      if (VIRT) {                         // jendela mulai dari ujung bawah
+        vEnd = items.length; vStart = Math.max(0, vEnd - 30);
+        topPad = vStart * EST; botPad = 0;
+      }
+      pin(); requestAnimationFrame(() => { pin(); measure(); }); setTimeout(() => { pin(); measure(); }, 120); setTimeout(pin, 350);
       return;
     }
+    if (VIRT) measure();                  // ukur baris terbaru → spacer akurat
     const isNew = lastId !== prevLastId;  // pesan BARU di ujung (bukan reaksi/edit/prepend)
     const added = Math.max(0, messages.length - prevLen);
     prevLastId = lastId; prevLen = messages.length;
@@ -202,7 +256,7 @@
 
   // Lompat + highlight ke pesan (dari hasil pencarian). Best-effort: hanya bila
   // pesannya termuat (dalam ~200 terakhir); kalau tidak, biarkan di posisi bawah.
-  $: if ($jumpMsg && box && items) tick().then(() => flashTo($jumpMsg));
+  $: if ($jumpMsg && box && items) { if (VIRT) ensureRendered(items.findIndex((it) => it.m && it.m.id === $jumpMsg)); tick().then(() => flashTo($jumpMsg)); }
   function flashTo(mid) {
     const el = box && box.querySelector(`[data-mid="${(window.CSS && CSS.escape) ? CSS.escape(mid) : mid}"]`);
     if (el) {
@@ -242,7 +296,8 @@
     <input type="date" bind:this={dateInput} on:change={onPickDate} style="position:absolute;width:0;height:0;opacity:0;pointer-events:none" />
   {/if}
   <div class="messages" bind:this={box} on:scroll={onScroll} style={$wallpapers[chatId] ? `background-color:${$wallpapers[chatId]}` : ""}>
-    {#each items as it (it.m.id || it.idx)}
+    {#if VIRT}<div class="virt-pad" style="height:{topPad}px"></div>{/if}
+    {#each renderItems as it (it.m.id || it.idx)}
       {#if it.m.type === "day"}
         <div class="day-chip"><span>{it.m.label || $t("today")}</span></div>
       {:else if it.m.type === "system"}
@@ -269,6 +324,7 @@
         <Bubble msg={it.m} {group} {chatId} {peerName} idx={it.idx} firstOfRun={it.firstOfRun} />
       {/if}
     {/each}
+    {#if VIRT}<div class="virt-pad" style="height:{botPad}px"></div>{/if}
   </div>
   {#if !atBottom}
     <button class="scroll-fab" on:click={() => { follow = true; atBottom = true; newCount = 0; toBottom(); }} aria-label={$t("scroll_bottom")}>

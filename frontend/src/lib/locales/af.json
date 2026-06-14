@@ -392,5 +392,7 @@
  "no_contacts": "Geen gestoorde kontakte nie",
  "keep_deleted": "Hou geskrap boodskappe",
  "keep_deleted_d": "Stoor die inhoud van boodskappe wat ander uitvee (teen-uitvee). Af = tree op soos WhatsApp.",
- "rec_voice": "neem oudio op …"
+ "rec_voice": "neem oudio op …",
+ "virt_list": "Virtuele boodskap lys",
+ "virt_list_d": "Eksperimenteel - lewer slegs sigbare boodskappe (ligter op groot geselsies)"
 }

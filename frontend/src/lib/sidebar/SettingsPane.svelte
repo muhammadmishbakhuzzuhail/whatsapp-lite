@@ -1,5 +1,5 @@
 <script>
-  import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted, accent } from "../../stores.js";
+  import { railView, theme, pinSet, beginSetPin, removePin, lockNow, logout, translateLang, soundOn, showDeleted, accent, virtList } from "../../stores.js";
   import { getProfile, getRetention, setRetention, setDefaultDisappearing, getProxy, setProxy, getBackgroundClose, setBackgroundClose, quitApp, getKeepDeleted, setKeepDeleted } from "../../services/data.js";
   import { uiScale, quickReactions, setQuickReaction, askPrompt, dnd } from "../../stores.js";
   function editQR(i) { askPrompt($t("quick_react_edit"), $quickReactions[i], (v) => setQuickReaction(i, [...v][0] || $quickReactions[i])); }
@@ -101,6 +101,13 @@
       <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4zM15 9a3 3 0 0 1 0 6M18 6a7 7 0 0 1 0 12"/></svg>
       <div class="grow"><div class="si-name">{$t("notif_sound")}</div><div class="si-desc">{$soundOn ? $t("active") : $t("off")}</div></div>
       <span class="switch {$soundOn ? '' : 'off'}"></span>
+    </div>
+
+    <!-- Virtualisasi daftar pesan (eksperimental) -->
+    <div class="settings-item" role="button" tabindex="0" on:click={() => virtList.update((v) => !v)} on:keydown={(e) => e.key === "Enter" && virtList.update((v) => !v)}>
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <div class="grow"><div class="si-name">{$t("virt_list")}</div><div class="si-desc">{$t("virt_list_d")}</div></div>
+      <span class="switch {$virtList ? '' : 'off'}"></span>
     </div>
 
     <!-- Anti-delete: lihat pesan yang ditarik pengirim -->

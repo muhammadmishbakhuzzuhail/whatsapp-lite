@@ -392,5 +392,7 @@
  "no_contacts": "Nav saglabātu kontaktu",
  "keep_deleted": "Saglabājiet izdzēstās ziņas",
  "keep_deleted_d": "Saglabājiet citu dzēsto ziņojumu saturu (pret dzēšanu). Izslēgts = uzvedies kā WhatsApp.",
- "rec_voice": "ieraksta audio…"
+ "rec_voice": "ieraksta audio…",
+ "virt_list": "Virtuālais ziņojumu saraksts",
+ "virt_list_d": "Eksperimentāls — atveidojiet tikai redzamus ziņojumus (vieglāk milzīgās tērzēšanas sarunās)"
 }

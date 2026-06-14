@@ -392,5 +392,7 @@
  "no_contacts": "Non hai contactos gardados",
  "keep_deleted": "Mantén as mensaxes eliminadas",
  "keep_deleted_d": "Garda o contido das mensaxes que outros eliminan (anti-borrado). Desactivado = comportarse como WhatsApp.",
- "rec_voice": "gravando audio..."
+ "rec_voice": "gravando audio...",
+ "virt_list": "Lista de mensaxes virtuais",
+ "virt_list_d": "Experimental: renderiza só as mensaxes visibles (máis lixeira nos chats grandes)"
 }

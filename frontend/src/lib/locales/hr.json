@@ -392,5 +392,7 @@
  "no_contacts": "Nema spremljenih kontakata",
  "keep_deleted": "Zadrži izbrisane poruke",
  "keep_deleted_d": "Spremite sadržaj poruka koje drugi brišu (protiv brisanja). Isključeno = ponašaj se kao WhatsApp.",
- "rec_voice": "snimanje zvuka…"
+ "rec_voice": "snimanje zvuka…",
+ "virt_list": "Virtualni popis poruka",
+ "virt_list_d": "Eksperimentalno — prikaz samo vidljivih poruka (svjetlije na velikim chatovima)"
 }

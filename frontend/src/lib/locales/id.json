@@ -11,6 +11,8 @@
  "all_chats": "Semua chat",
  "typing": "mengetik…",
  "rec_voice": "merekam suara…",
+ "virt_list": "Daftar pesan virtual",
+ "virt_list_d": "Eksperimental — render hanya pesan yang terlihat (ringan di chat sangat panjang)",
  "composer_placeholder": "Ketik pesan",
  "empty_conv": "Pilih chat untuk mulai mengobrol",
  "no_match": "Tidak ada chat yang cocok.",

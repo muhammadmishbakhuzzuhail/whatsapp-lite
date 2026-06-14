@@ -392,5 +392,7 @@
  "no_contacts": "Ingen lagrede kontakter",
  "keep_deleted": "Behold slettede meldinger",
  "keep_deleted_d": "Lagre innholdet i meldinger andre sletter (anti-sletting). Av = oppfør deg som WhatsApp.",
- "rec_voice": "tar opp lyd..."
+ "rec_voice": "tar opp lyd...",
+ "virt_list": "Virtuell meldingsliste",
+ "virt_list_d": "Eksperimentell - gjengi bare synlige meldinger (lettere på store chatter)"
 }

@@ -84,6 +84,14 @@ try { storedSound = localStorage.getItem("wa-sound"); } catch (e) {}
 export const soundOn = writable(storedSound !== "0");
 soundOn.subscribe((v) => { try { localStorage.setItem("wa-sound", v ? "1" : "0"); } catch (e) {} });
 
+// Virtualisasi daftar pesan (EKSPERIMENTAL, default OFF). Hanya render bubble
+// yg terlihat + spacer ber-tinggi-terukur → DOM kecil di chat sangat panjang.
+// Default off karena ubah math scroll; aktifkan utk uji.
+let storedVirt = null;
+try { storedVirt = localStorage.getItem("wa-virt"); } catch (e) {}
+export const virtList = writable(storedVirt === "1");
+virtList.subscribe((v) => { try { localStorage.setItem("wa-virt", v ? "1" : "0"); } catch (e) {} });
+
 // Anti-delete: tampilkan isi pesan yg ditarik pengirim + tag "dihapus". Default ON.
 let storedShowDel = null;
 try { storedShowDel = localStorage.getItem("wa-show-deleted"); } catch (e) {}
