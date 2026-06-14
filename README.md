@@ -66,6 +66,31 @@ machine-translated)**.
   DB, evicted cache, bounded message retention, no telemetry) to offset the WebView overhead. Details in
   `PRODUCT-BRIEF.md` §12.3.
 
+## Install
+
+### Arch Linux / CachyOS (AUR)
+
+Once published to the AUR, an AUR helper installs everything (dependencies, build, binary, desktop entry,
+icon) in one command:
+
+```sh
+yay -S whatslite-git        # or: paru -S whatslite-git
+```
+
+Or build the AUR package locally without a helper:
+
+```sh
+cd packaging/aur
+makepkg -si                 # pulls deps, builds, installs
+```
+
+`whatslite-git` builds the latest commit from source. `pacman -R whatslite-git` uninstalls it.
+(A versioned `whatslite` package will follow once tagged releases exist.)
+
+### Other distros
+
+No native package yet — build from source (below). An AppImage may be provided via GitHub Releases later.
+
 ## Build prerequisites (Linux)
 
 Requires **Go**, **WebKitGTK + GTK3**, and the **Wails CLI**. On Arch/CachyOS:
